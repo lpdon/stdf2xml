@@ -1,11 +1,3 @@
-//============================================================================
-// Name        : STDF2XML.cpp
-// Author      : pidgey
-// Version     :
-// Copyright   : 
-// Description : Hello World in C++, Ansi-style
-//============================================================================
-
 #include <iostream>
 #include <fstream>
 #include <list>
