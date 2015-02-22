@@ -22,9 +22,11 @@ using namespace std;
 class STDF_record
 {
 	protected:
-		string name;
-		uint16_t length;
+		const string name;
+		const uint16_t length;
 		char* data;
+
+		uint16_t bytesLeft;
 
 		virtual void decodeData() = 0;
 
@@ -41,11 +43,12 @@ class STDF_record
 		static void appendChild(pugi::xml_node& node, const string& variableName, T variable);
 
 		static STDF_record* getRecordInstance( char*& bufferPtr );
-		static const uint8_t readU1( char*& bufferPtr );
-		static const uint16_t readU2( char*& bufferPtr );
-		static const uint32_t readU4( char*& bufferPtr );
-		static const char readC1( char*& bufferPtr );
-		static const string readCn( char*& bufferPtr );
+
+		const uint8_t readU1( char*& bufferPtr );
+		const uint16_t readU2( char*& bufferPtr );
+		const uint32_t readU4( char*& bufferPtr );
+		const char readC1( char*& bufferPtr );
+		const string readCn( char*& bufferPtr );
 
 		virtual ~STDF_record() { };
 };
@@ -104,6 +107,15 @@ class MIR : public STDF_record
 		string floorId;
 		string processId;
 		string operationFrequency;
+		string specName;
+		string specVer;
+		string flowId;
+		string setupId;
+		string designRevision;
+		string engId;
+		string romCode;
+		string serialNum;
+		string supervisiorName;
 
 		virtual void decodeData();
 

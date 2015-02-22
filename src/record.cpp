@@ -6,9 +6,9 @@
 
 STDF_record* STDF_record::getRecordInstance(char*& bufferPtr)
 {
-	uint16_t length = STDF_record::readU2(bufferPtr);
-	uint8_t type = STDF_record::readU1(bufferPtr);
-	uint8_t subType = STDF_record::readU1(bufferPtr);
+	uint16_t length = Utils::readU2(bufferPtr);
+	uint8_t type = Utils::readU1(bufferPtr);
+	uint8_t subType = Utils::readU1(bufferPtr);
 
 	switch( type )
 	{
@@ -39,54 +39,61 @@ STDF_record* STDF_record::getRecordInstance(char*& bufferPtr)
 
 const uint8_t STDF_record::readU1(char*& bufferPtr)
 {
-	uint8_t value;
-	memcpy(&value, bufferPtr, 1);
-	bufferPtr++;
-	return value;
+	if( this->bytesLeft > 0)
+	{
+		this->bytesLeft--;
+		return Utils::readU1( bufferPtr );
+	}
+	return 0;
 }
 
 const uint16_t STDF_record::readU2(char*& bufferPtr)
 {
-	uint16_t value;
-	memcpy(&value, bufferPtr, 2);
-	bufferPtr+=2;
-	return value;
+	if( this->bytesLeft > 0)
+	{
+		this->bytesLeft -= 2;
+		return Utils::readU2( bufferPtr );
+	}
+	return 0;
 }
 
 const uint32_t STDF_record::readU4( char*& bufferPtr )
 {
-	uint32_t value;
-	memcpy(&value, bufferPtr, 4);
-	bufferPtr += 4;
-	return value;
+	if( this->bytesLeft > 0)
+	{
+		this->bytesLeft -= 4;
+		return Utils::readU4( bufferPtr );
+	}
+	return 0;
 }
 
 const char STDF_record::readC1( char*& bufferPtr )
 {
-	char value = static_cast<char>( *bufferPtr );
-	bufferPtr ++;
-	return value;
+	if( this->bytesLeft > 0)
+	{
+		this->bytesLeft --;
+		return Utils::readC1( bufferPtr );
+	}
+	return ' ';
 }
 
 const string STDF_record::readCn( char*& bufferPtr )
 {
-	uint16_t length = STDF_record::readU1(bufferPtr);
-
-	if ( length > 0)
+	if ( this->bytesLeft > 0 )
 	{
-		char* tempBuffer = new char[length];
-		memcpy(tempBuffer, bufferPtr, length);
-		string returnStr(tempBuffer, length);
-		delete [] tempBuffer;
-		bufferPtr += length;
-		return returnStr;
+		uint16_t recordLength = Utils::readU1( bufferPtr );
+		bufferPtr --;
+		this->bytesLeft -= recordLength + 1;
+		return Utils::readCn( bufferPtr );
 	}
 	return string();
 }
 
 STDF_record::STDF_record( string name, uint16_t length, char*& data )
 	: name(name), length(length), data(data)
-{}
+{
+	this->bytesLeft = length;
+}
 
 FAR::FAR( int l, char*& d )
 	: STDF_record("FAR", l, d),
@@ -99,8 +106,8 @@ FAR::FAR( int l, char*& d )
 
 void FAR::decodeData()
 {
-	cpuType = STDF_record::readU1(data);
-	stdfVersion = STDF_record::readU1(data);
+	cpuType = readU1(data);
+	stdfVersion = readU1(data);
 }
 
 void FAR::appendNode(pugi::xml_document& doc)
@@ -129,35 +136,44 @@ MIR::MIR( int l, char*& d )
 
 void MIR::decodeData()
 {
-	setupTime = STDF_record::readU4(data);
-	startTime = STDF_record::readU4(data);
-	stationNumber = STDF_record::readU1(data);
-	modeCode = STDF_record::readC1(data);
-	retestCode = STDF_record::readC1(data);
-	protectionCode = STDF_record::readC1(data);
-	burnInTime = STDF_record::readU2(data);
-	commmandModeCode = STDF_record::readC1(data);
-	lotId = STDF_record::readCn(data);
-	partType = STDF_record::readCn(data);
-	nodeName = STDF_record::readCn(data);
-	testerType = STDF_record::readCn(data);
-	jobName = STDF_record::readCn(data);
-	jobRevision = STDF_record::readCn(data);
-	sublotId = STDF_record::readCn(data);
-	operatorName = STDF_record::readCn(data);
-	execType = STDF_record::readCn(data);
-	execVer = STDF_record::readCn(data);
-	testCode = STDF_record::readCn(data);
-	testTemperature = STDF_record::readCn(data);
-	userText = STDF_record::readCn(data);
-	auxFile = STDF_record::readCn(data);
-	pkgType = STDF_record::readCn(data);
-	familyId = STDF_record::readCn(data);
-	dateCode = STDF_record::readCn(data);
-	facilityId = STDF_record::readCn(data);
-	floorId = STDF_record::readCn(data);
-	processId = STDF_record::readCn(data);
-	operationFrequency = STDF_record::readCn(data);
+	setupTime = readU4(data);
+	startTime = readU4(data);
+	stationNumber = readU1(data);
+	modeCode = readC1(data);
+	retestCode = readC1(data);
+	protectionCode = readC1(data);
+	burnInTime = readU2(data);
+	commmandModeCode = readC1(data);
+	lotId = readCn(data);
+	partType = readCn(data);
+	nodeName = readCn(data);
+	testerType = readCn(data);
+	jobName = readCn(data);
+	jobRevision = readCn(data);
+	sublotId = readCn(data);
+	operatorName = readCn(data);
+	execType = readCn(data);
+	execVer = readCn(data);
+	testCode = readCn(data);
+	testTemperature = readCn(data);
+	userText = readCn(data);
+	auxFile = readCn(data);
+	pkgType = readCn(data);
+	familyId = readCn(data);
+	dateCode = readCn(data);
+	facilityId = readCn(data);
+	floorId = readCn(data);
+	processId = readCn(data);
+	operationFrequency = readCn(data);
+	specName = readCn(data);
+	specVer = readCn(data);
+	flowId = readCn(data);
+	setupId = readCn(data);
+	designRevision = readCn(data);
+	engId = readCn(data);
+	romCode = readCn(data);
+	serialNum = readCn(data);
+	supervisiorName = readCn(data);
 }
 
 void MIR::appendNode( pugi::xml_document& doc )
@@ -194,5 +210,14 @@ void MIR::appendNode( pugi::xml_document& doc )
 	STDF_record::appendChild(node, "floorId", this->floorId);
 	STDF_record::appendChild(node, "processId", this->processId);
 	STDF_record::appendChild(node, "operationFrequency", this->operationFrequency);
+	STDF_record::appendChild(node, "specName", this->specName);
+	STDF_record::appendChild(node, "specVer", this->specVer);
+	STDF_record::appendChild(node, "flowId", this->flowId);
+	STDF_record::appendChild(node, "setupId", this->setupId);
+	STDF_record::appendChild(node, "designRevision", this->designRevision);
+	STDF_record::appendChild(node, "engId", this->engId);
+	STDF_record::appendChild(node, "romCode", this->romCode);
+	STDF_record::appendChild(node, "serialNum", this->serialNum);
+	STDF_record::appendChild(node, "supervisiorName", this->supervisiorName);
 }
 
