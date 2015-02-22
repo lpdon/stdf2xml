@@ -90,10 +90,8 @@ const string STDF_record::readCn( char*& bufferPtr )
 }
 
 STDF_record::STDF_record( string name, uint16_t length, char*& data )
-	: name(name), length(length), data(data)
-{
-	this->bytesLeft = length;
-}
+	: name(name), length(length), data(data), bytesLeft(length)
+{}
 
 FAR::FAR( int l, char*& d )
 	: STDF_record("FAR", l, d),
