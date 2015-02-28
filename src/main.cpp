@@ -11,48 +11,58 @@
 
 using namespace std;
 
-int main(int argc, char* argv[]) {
+int main( int argc, char* argv[] )
+{
 	streampos size;
-	string filePath = "D:/Coisas TI/full code/full code/C-2409102-11-E4.DLOG.STD";
+	//string filePath =
+	//"D:/Coisas TI/full code/full code/C-2409102-11-E4.DLOG.STD";
 	char* memblock;
 	char* bufferPtr;
 	uint16_t recordSize;
 
 	STDF_record* record;
 	list<STDF_record*> recordList;
-    pugi::xml_document doc;
+	pugi::xml_document doc;
+	pugi::xml_node root;
 
-	ifstream file( filePath.c_str(), ios::binary );
-
-	if( file.is_open() )
+	if ( argc < 2 )
 	{
+		cout << "File not found" << endl;
+		return 1;
+	}
+
+	ifstream file( argv[1], ios::binary );
+
+	if ( file.is_open() )
+	{
+		root = doc.append_child("root");
 		size = Utils::getFileSize( file );
-		memblock = new char [size];
+		memblock = new char[size];
 		bufferPtr = memblock;
-		file.seekg (0, ios::beg);
-		file.read (memblock, size);
+		file.seekg( 0, ios::beg );
+		file.read( memblock, size );
 		file.close();
 
-		while ( size > 0 )
+		while (size > 0)
 		{
 			recordSize = static_cast<uint16_t>( *bufferPtr );
 
-			if ( recordSize > 0)
+			if ( recordSize > 0 )
 			{
 				record = STDF_record::getRecordInstance( bufferPtr );
 			}
 
 			if ( record )
 			{
-				record->appendNode( doc );
+				record->appendNode( root );
 				delete record;
 			}
 
 			size -= HEADER_SIZE + recordSize;
 		}
-		delete [] memblock;
+		delete[] memblock;
 
-	    doc.print(std::cout);
+		doc.print( std::cout );
 	}
 	return 0;
 }

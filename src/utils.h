@@ -1,10 +1,3 @@
-/*
- * utils.h
- *
- *  Created on: 15.02.2015
- *      Author: Leandro
- */
-
 #ifndef UTILS_H_
 #define UTILS_H_
 
