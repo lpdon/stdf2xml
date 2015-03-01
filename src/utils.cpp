@@ -24,6 +24,14 @@ const uint16_t Utils::readU2( char*& bufferPtr )
 	return value;
 }
 
+const int16_t Utils::readI2( char*& bufferPtr )
+{
+	int16_t value;
+	memcpy( &value, bufferPtr, 2 );
+	bufferPtr += 2;
+	return value;
+}
+
 const uint32_t Utils::readU4( char*& bufferPtr )
 {
 	uint32_t value;
@@ -53,4 +61,21 @@ const string Utils::readCn( char*& bufferPtr )
 		return returnStr;
 	}
 	return string();
+}
+
+const uint16_t* Utils::readKU2( char*& bufferPtr, uint16_t k )
+{
+	uint16_t* retPtr = new uint16_t[k];
+
+	for( int i = 0; i < k; i++ )
+	{
+		memcpy( &retPtr[i], bufferPtr, 2 );
+		bufferPtr += 2;
+	}
+	return retPtr;
+}
+
+const uint8_t Utils::readB1( char*& bufferPtr )
+{
+	return Utils::readU1( bufferPtr );
 }

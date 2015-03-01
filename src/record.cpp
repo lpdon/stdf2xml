@@ -30,8 +30,25 @@ STDF_record* STDF_record::getRecordInstance( char*& bufferPtr )
 					return new MIR( length, bufferPtr );
 				case 30:
 					return new PCR( length, bufferPtr );
+				case 40:
+					return new HBR( length, bufferPtr );
+				case 50:
+					return new SBR( length, bufferPtr );
 				case 60:
 					return new PMR( length, bufferPtr );
+				case 62:
+					return new PGR( length, bufferPtr );
+				default:
+					break;
+			}
+			break;
+		case 5:
+			switch ( subType )
+			{
+				case 10:
+					return new PIR( length, bufferPtr );
+				case 20:
+					return new PRR( length, bufferPtr );
 				default:
 					break;
 			}
@@ -63,6 +80,16 @@ const uint16_t STDF_record::readU2( char*& bufferPtr )
 	return 0;
 }
 
+const int16_t STDF_record::readI2( char*& bufferPtr )
+{
+	if ( this->bytesLeft > 0 )
+	{
+		this->bytesLeft -= 2;
+		return Utils::readI2( bufferPtr );
+	}
+	return 0;
+}
+
 const uint32_t STDF_record::readU4( char*& bufferPtr )
 {
 	if ( this->bytesLeft > 0 )
@@ -87,12 +114,52 @@ const string STDF_record::readCn( char*& bufferPtr )
 {
 	if ( this->bytesLeft > 0 )
 	{
-		uint16_t recordLength = Utils::readU1( bufferPtr );
+		uint16_t fieldLength = Utils::readU1( bufferPtr );
 		bufferPtr--;
-		this->bytesLeft -= recordLength + 1;
+		this->bytesLeft -= fieldLength + 1;
 		return Utils::readCn( bufferPtr );
 	}
 	return string();
+}
+
+const uint16_t* STDF_record::readKU2( char*& bufferPtr, uint16_t k )
+{
+	if ( this->bytesLeft > 0 )
+	{
+		uint16_t fieldLength = Utils::readU2( bufferPtr );
+		bufferPtr-=2;
+		this->bytesLeft -= fieldLength + 2;
+		return Utils::readKU2( bufferPtr, k );
+	}
+	return NULL;
+}
+
+const uint8_t STDF_record::readB1( char*& bufferPtr )
+{
+	if ( this->bytesLeft > 0 )
+	{
+		this->bytesLeft--;
+		return Utils::readB1( bufferPtr );
+	}
+	return 0;
+}
+
+const uint8_t* STDF_record::readBn( char*& bufferPtr )
+{
+//	if ( this->bytesLeft > 0 )
+//	{
+//		uint16_t fieldLength = Utils::readU1( bufferPtr );
+//		bufferPtr--;
+//		this->bytesLeft -= fieldLength + 1;
+//
+//		for( int i = 0; i < bytesLeft; i++ )
+//		{
+//
+//		}
+//		return Utils::readCn( bufferPtr );
+//	}
+//	return string();
+	return NULL;
 }
 
 STDF_record::STDF_record( string name, uint16_t length, char*& data ) :
@@ -322,4 +389,200 @@ void PMR::appendNode( pugi::xml_node& root )
 	STDF_record::appendChild( node, "LogicalName", this->logicalName );
 	STDF_record::appendChild( node, "HeadNumber", static_cast<uint16_t>( this->headNumber ) );
 	STDF_record::appendChild( node, "SiteNumber", static_cast<uint16_t>( this->siteNumber ) );
+}
+
+HBR::HBR( int l, char*& d ) :
+		STDF_record( "HBR", l, d ),
+		headNumber( 0 ),
+		siteNumber( 0 ),
+		hBinNumber( 0 ),
+		hBinCount( 0 ),
+		hBinPassFail( ' ' )
+{
+	decodeData();
+	d += l;
+}
+
+void HBR::decodeData()
+{
+	headNumber = readU1( data );
+	siteNumber = readU1( data );
+	hBinNumber = readU2( data );
+	hBinCount = readU4( data );
+	hBinPassFail = readC1( data );
+	hBinName = readCn( data );
+}
+
+void HBR::appendNode( pugi::xml_node& root )
+{
+	pugi::xml_node node = root.append_child( "record" );
+
+	STDF_record::appendChild( node, "name", this->name );
+	STDF_record::appendChild( node, "length", this->length );
+	STDF_record::appendChild( node, "HeadNumber", static_cast<uint16_t>( this->headNumber ) );
+	STDF_record::appendChild( node, "SiteNumber", static_cast<uint16_t>( this->siteNumber ) );
+	STDF_record::appendChild( node, "HBinNumber", this->hBinNumber );
+	STDF_record::appendChild( node, "HBinCount", this->hBinCount );
+	STDF_record::appendChild( node, "HBinPassFail", this->hBinPassFail );
+	STDF_record::appendChild( node, "HBinName", this->hBinName );
+}
+
+SBR::SBR( int l, char*& d ) :
+		STDF_record( "SBR", l, d ),
+		headNumber( 0 ),
+		siteNumber( 0 ),
+		sBinNumber( 0 ),
+		sBinCount( 0 ),
+		sBinPassFail( ' ' )
+{
+	decodeData();
+	d += l;
+}
+
+void SBR::decodeData()
+{
+	headNumber = readU1( data );
+	siteNumber = readU1( data );
+	sBinNumber = readU2( data );
+	sBinCount = readU4( data );
+	sBinPassFail = readC1( data );
+	sBinName = readCn( data );
+}
+
+void SBR::appendNode( pugi::xml_node& root )
+{
+	pugi::xml_node node = root.append_child( "record" );
+
+	STDF_record::appendChild( node, "name", this->name );
+	STDF_record::appendChild( node, "length", this->length );
+	STDF_record::appendChild( node, "HeadNumber", static_cast<uint16_t>( this->headNumber ) );
+	STDF_record::appendChild( node, "SiteNumber", static_cast<uint16_t>( this->siteNumber ) );
+	STDF_record::appendChild( node, "SBinNumber", this->sBinNumber );
+	STDF_record::appendChild( node, "SBinCount", this->sBinCount );
+	STDF_record::appendChild( node, "SBinPassFail", this->sBinPassFail );
+	STDF_record::appendChild( node, "SBinName", this->sBinName );
+}
+
+PGR::PGR( int l, char*& d ) :
+		STDF_record( "PGR", l, d ),
+		groupIndex( 0 ),
+		indexCount( 0 ),
+		pmrIndex( NULL )
+{
+	decodeData();
+	d += l;
+}
+
+PGR::~PGR()
+{
+	if ( pmrIndex )
+	{
+		delete [] pmrIndex;
+	}
+}
+
+void PGR::decodeData()
+{
+	groupIndex = readU2( data );
+	groupName = readCn( data );
+	indexCount = readU2( data );
+	pmrIndex = const_cast<uint16_t*>( readKU2( data, indexCount ) );
+}
+
+void PGR::appendNode( pugi::xml_node& root )
+{
+	pugi::xml_node node = root.append_child( "record" );
+
+	STDF_record::appendChild( node, "name", this->name );
+	STDF_record::appendChild( node, "length", this->length );
+	STDF_record::appendChild( node, "GroupIndex", this->groupIndex );
+	STDF_record::appendChild( node, "GroupName", this->groupName );
+	STDF_record::appendChild( node, "IndexCount", this->indexCount );
+
+	if ( pmrIndex )
+	{
+		pugi::xml_node indexNode = node.append_child( "PmrIndexes" );
+		for( int i = 0; i < indexCount; i++ )
+		{
+			STDF_record::appendChild( indexNode, "Index", this->pmrIndex[i] );
+		}
+	}
+}
+
+PIR::PIR( int l, char*& d ) :
+		STDF_record( "PIR", l, d ),
+		headNumber( 0 ),
+		siteNumber( 0 )
+{
+	decodeData();
+	d += l;
+}
+
+void PIR::decodeData()
+{
+	headNumber = readU1( data );
+	siteNumber = readU1( data );
+}
+
+void PIR::appendNode( pugi::xml_node& root )
+{
+	pugi::xml_node node = root.append_child( "record" );
+
+	STDF_record::appendChild( node, "name", this->name );
+	STDF_record::appendChild( node, "length", this->length );
+	STDF_record::appendChild( node, "HeadNumber", static_cast<uint16_t>( this->headNumber ) );
+	STDF_record::appendChild( node, "SiteNumber", static_cast<uint16_t>( this->siteNumber ) );
+}
+
+PRR::PRR( int l, char*& d ) :
+		STDF_record( "PRR", l, d ),
+		headNumber( 0 ),
+		siteNumber( 0 ),
+		partFlag( 0 ),
+		numTest( 0 ),
+		hardBin( 0 ),
+		softBin( 0 ),
+		xCoord( 0 ),
+		yCoord( 0 ),
+		testTime( 0 )
+{
+	memset(partFix, 0, 255);
+	decodeData();
+	d += l;
+}
+
+void PRR::decodeData()
+{
+	headNumber = readU1( data );
+	siteNumber = readU1( data );
+	partFlag = readB1( data );
+	numTest = readU2( data );
+	hardBin = readU2( data );
+	softBin = readU2( data );
+	xCoord = readI2( data );
+	yCoord = readI2( data );
+	testTime = readU4( data );
+	partId = readCn( data );
+	partText = readCn( data );
+	//partFix = readBn( data );
+}
+
+void PRR::appendNode( pugi::xml_node& root )
+{
+	pugi::xml_node node = root.append_child( "record" );
+
+	STDF_record::appendChild( node, "name", this->name );
+	STDF_record::appendChild( node, "length", this->length );
+	STDF_record::appendChild( node, "HeadNumber", static_cast<uint16_t>( this->headNumber ) );
+	STDF_record::appendChild( node, "SiteNumber", static_cast<uint16_t>( this->siteNumber ) );
+	STDF_record::appendChild( node, "PartFlag", this->partFlag );
+	STDF_record::appendChild( node, "NumTest", this->numTest );
+	STDF_record::appendChild( node, "HardBin", this->hardBin );
+	STDF_record::appendChild( node, "SoftBin", this->softBin );
+	STDF_record::appendChild( node, "XCoord", this->xCoord );
+	STDF_record::appendChild( node, "YCoord", this->yCoord );
+	STDF_record::appendChild( node, "TestTime", this->testTime );
+	STDF_record::appendChild( node, "PartId", this->partId );
+	STDF_record::appendChild( node, "PartText", this->partText );
+	//STDF_record::appendChild( node, "PartFix", this->partFix );
 }

@@ -40,9 +40,13 @@ class STDF_record
 
 		const uint8_t readU1( char*& bufferPtr );
 		const uint16_t readU2( char*& bufferPtr );
+		const uint16_t* readKU2( char*& bufferPtr, uint16_t k );
+		const int16_t readI2( char*& bufferPtr );
 		const uint32_t readU4( char*& bufferPtr );
 		const char readC1( char*& bufferPtr );
 		const string readCn( char*& bufferPtr );
+		const uint8_t readB1( char*& bufferPtr );
+		const uint8_t* readBn( char*& bufferPtr );
 
 		virtual ~STDF_record()
 		{
@@ -158,7 +162,7 @@ class PCR: public STDF_record
 };
 
 /*Pin Map Record*/
-class PMR: public STDF_record
+class PMR : public STDF_record
 {
 	private:
 		uint16_t pinIndex;
@@ -173,6 +177,98 @@ class PMR: public STDF_record
 
 	public:
 		PMR( int l, char*& d );
+		virtual void appendNode( pugi::xml_node& root );
+};
+
+/*Hardware Bin Record*/
+class HBR : public STDF_record
+{
+	private:
+		uint8_t headNumber;
+		uint8_t siteNumber;
+		uint16_t hBinNumber;
+		uint32_t hBinCount;
+		char hBinPassFail;
+		string hBinName;
+
+		virtual void decodeData();
+
+	public:
+		HBR( int l, char*& d );
+		virtual void appendNode( pugi::xml_node& root );
+};
+
+/*Software Bin Record*/
+class SBR : public STDF_record
+{
+	private:
+		uint8_t headNumber;
+		uint8_t siteNumber;
+		uint16_t sBinNumber;
+		uint32_t sBinCount;
+		char sBinPassFail;
+		string sBinName;
+
+		virtual void decodeData();
+
+	public:
+		SBR( int l, char*& d );
+		virtual void appendNode( pugi::xml_node& root );
+};
+
+/*Pin Group Record*/
+class PGR : public STDF_record
+{
+	private:
+		uint16_t groupIndex;
+		string groupName;
+		uint16_t indexCount;
+		uint16_t* pmrIndex;
+
+		virtual void decodeData();
+
+	public:
+		PGR( int l, char*& d );
+		virtual void appendNode( pugi::xml_node& root );
+
+		virtual ~PGR();
+};
+
+/*Part Information Record*/
+class PIR : public STDF_record
+{
+	private:
+		uint8_t headNumber;
+		uint8_t siteNumber;
+
+		virtual void decodeData();
+
+	public:
+		PIR( int l, char*& d );
+		virtual void appendNode( pugi::xml_node& root );
+};
+
+/*Part Results Record*/
+class PRR : public STDF_record
+{
+	private:
+		uint8_t headNumber;
+		uint8_t siteNumber;
+		uint8_t partFlag;
+		uint16_t numTest;
+		uint16_t hardBin;
+		uint16_t softBin;
+		int16_t xCoord;
+		int16_t yCoord;
+		uint32_t testTime;
+		string partId;
+		string partText;
+		uint8_t partFix[255];
+
+		virtual void decodeData();
+
+	public:
+		PRR( int l, char*& d );
 		virtual void appendNode( pugi::xml_node& root );
 };
 

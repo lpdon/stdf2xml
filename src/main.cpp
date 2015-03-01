@@ -14,8 +14,6 @@ using namespace std;
 int main( int argc, char* argv[] )
 {
 	streampos size;
-	//string filePath =
-	//"D:/Coisas TI/full code/full code/C-2409102-11-E4.DLOG.STD";
 	char* memblock;
 	char* bufferPtr;
 	uint16_t recordSize;

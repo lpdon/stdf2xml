@@ -4,7 +4,10 @@ The idea is to a create a C++ tool to convert STDF v4 files to a more human-frie
 
 STDF records implemented so far:
 - FAR
-- MIR
 - ATR
+- MIR
 - PCR
+- HBR
+- SBR
 - PMR
+- PGR
