@@ -431,8 +431,8 @@ void PMR::appendNode( pugi::xml_node& root )
 	STDF_record::appendChild( node, "ChannelName", this->channelName );
 	STDF_record::appendChild( node, "PhysicalName", this->physicalName );
 	STDF_record::appendChild( node, "LogicalName", this->logicalName );
-	STDF_record::appendChild( node, "HeadNumber", static_cast<uint16_t>( this->headNumber ) );
-	STDF_record::appendChild( node, "SiteNumber", static_cast<uint16_t>( this->siteNumber ) );
+	STDF_record::appendChild( node, "HeadNumber", this->headNumber );
+	STDF_record::appendChild( node, "SiteNumber", this->siteNumber );
 }
 
 HBR::HBR( int l, char*& d ) :
@@ -463,8 +463,8 @@ void HBR::appendNode( pugi::xml_node& root )
 
 	STDF_record::appendChild( node, "name", this->name );
 	STDF_record::appendChild( node, "length", this->length );
-	STDF_record::appendChild( node, "HeadNumber", static_cast<uint16_t>( this->headNumber ) );
-	STDF_record::appendChild( node, "SiteNumber", static_cast<uint16_t>( this->siteNumber ) );
+	STDF_record::appendChild( node, "HeadNumber", this->headNumber );
+	STDF_record::appendChild( node, "SiteNumber", this->siteNumber );
 	STDF_record::appendChild( node, "HBinNumber", this->hBinNumber );
 	STDF_record::appendChild( node, "HBinCount", this->hBinCount );
 	STDF_record::appendChild( node, "HBinPassFail", this->hBinPassFail );
@@ -499,8 +499,8 @@ void SBR::appendNode( pugi::xml_node& root )
 
 	STDF_record::appendChild( node, "name", this->name );
 	STDF_record::appendChild( node, "length", this->length );
-	STDF_record::appendChild( node, "HeadNumber", static_cast<uint16_t>( this->headNumber ) );
-	STDF_record::appendChild( node, "SiteNumber", static_cast<uint16_t>( this->siteNumber ) );
+	STDF_record::appendChild( node, "HeadNumber", this->headNumber );
+	STDF_record::appendChild( node, "SiteNumber", this->siteNumber );
 	STDF_record::appendChild( node, "SBinNumber", this->sBinNumber );
 	STDF_record::appendChild( node, "SBinCount", this->sBinCount );
 	STDF_record::appendChild( node, "SBinPassFail", this->sBinPassFail );
@@ -574,8 +574,8 @@ void PIR::appendNode( pugi::xml_node& root )
 
 	STDF_record::appendChild( node, "name", this->name );
 	STDF_record::appendChild( node, "length", this->length );
-	STDF_record::appendChild( node, "HeadNumber", static_cast<uint16_t>( this->headNumber ) );
-	STDF_record::appendChild( node, "SiteNumber", static_cast<uint16_t>( this->siteNumber ) );
+	STDF_record::appendChild( node, "HeadNumber", this->headNumber );
+	STDF_record::appendChild( node, "SiteNumber", this->siteNumber );
 }
 
 PRR::PRR( int l, char*& d ) :
@@ -625,8 +625,8 @@ void PRR::appendNode( pugi::xml_node& root )
 
 	STDF_record::appendChild( node, "name", this->name );
 	STDF_record::appendChild( node, "length", this->length );
-	STDF_record::appendChild( node, "HeadNumber", static_cast<uint16_t>( this->headNumber ) );
-	STDF_record::appendChild( node, "SiteNumber", static_cast<uint16_t>( this->siteNumber ) );
+	STDF_record::appendChild( node, "HeadNumber", this->headNumber );
+	STDF_record::appendChild( node, "SiteNumber", this->siteNumber );
 	STDF_record::appendChild( node, "PartFlag", this->partFlag );
 	STDF_record::appendChild( node, "NumTest", this->numTest );
 	STDF_record::appendChild( node, "HardBin", this->hardBin );
@@ -699,14 +699,14 @@ void PTR::appendNode( pugi::xml_node& root )
 	STDF_record::appendChild( node, "name", this->name );
 	STDF_record::appendChild( node, "length", this->length );
 	STDF_record::appendChild( node, "TestNumber", this->testNumber );
-	STDF_record::appendChild( node, "HeadNumber", static_cast<uint16_t>( this->headNumber ) );
-	STDF_record::appendChild( node, "SiteNumber", static_cast<uint16_t>( this->siteNumber ) );
-	STDF_record::appendChild( node, "TestFlag", static_cast<uint16_t>( this->testFlag ) );
-	STDF_record::appendChild( node, "ParmFlag", static_cast<uint16_t>( this->parmFlag ) );
+	STDF_record::appendChild( node, "HeadNumber", this->headNumber );
+	STDF_record::appendChild( node, "SiteNumber", this->siteNumber );
+	STDF_record::appendChild( node, "TestFlag", this->testFlag );
+	STDF_record::appendChild( node, "ParmFlag", this->parmFlag );
 	STDF_record::appendChild( node, "Result", this->result );
 	STDF_record::appendChild( node, "TestTxt", this->testTxt );
 	STDF_record::appendChild( node, "AlarmId", this->alarmId );
-	STDF_record::appendChild( node, "OptFlag", static_cast<uint16_t>( this->optFlag ) );
+	STDF_record::appendChild( node, "OptFlag", this->optFlag );
 	STDF_record::appendChild( node, "ResScal", static_cast<int16_t>( this->optFlag ) );
 	STDF_record::appendChild( node, "LlmScal", static_cast<int16_t>( this->llmScal ) );
 	STDF_record::appendChild( node, "HlmScal", static_cast<int16_t>( this->hlmScal ) );
@@ -820,10 +820,10 @@ void FTR::appendNode( pugi::xml_node& root )
 	STDF_record::appendChild( node, "name", this->name );
 	STDF_record::appendChild( node, "length", this->length );
 	STDF_record::appendChild( node, "TestNumber", this->testNumber );
-	STDF_record::appendChild( node, "HeadNumber", static_cast<uint16_t>( this->headNumber ) );
-	STDF_record::appendChild( node, "SiteNumber", static_cast<uint16_t>( this->siteNumber ) );
-	STDF_record::appendChild( node, "TestFlag", static_cast<uint16_t>( this->testFlag ) );
-	STDF_record::appendChild( node, "OptFlag", static_cast<uint16_t>( this->optFlag ) );
+	STDF_record::appendChild( node, "HeadNumber", this->headNumber );
+	STDF_record::appendChild( node, "SiteNumber", this->siteNumber );
+	STDF_record::appendChild( node, "TestFlag", this->testFlag );
+	STDF_record::appendChild( node, "OptFlag", this->optFlag );
 	STDF_record::appendChild( node, "CycleCount", this->cycleCount );
 	STDF_record::appendChild( node, "RelativeVectorAddress", this->relativeVectorAddress );
 	STDF_record::appendChild( node, "RepeatCount", this->repeatCount );
