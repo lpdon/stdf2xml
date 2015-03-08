@@ -43,6 +43,7 @@ int main( int argc, char* argv[] )
 
 		while (size > 0)
 		{
+			record = NULL;
 			recordSize = static_cast<uint16_t>( *bufferPtr );
 
 			if ( recordSize > 0 )
@@ -56,6 +57,7 @@ int main( int argc, char* argv[] )
 				delete record;
 			}
 
+			bufferPtr += HEADER_SIZE + recordSize;
 			size -= HEADER_SIZE + recordSize;
 		}
 		delete[] memblock;

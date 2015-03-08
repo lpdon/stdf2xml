@@ -36,17 +36,27 @@ class STDF_record
 		static void appendChild( pugi::xml_node& node,
 				const string& variableName, T variable );
 
-		static STDF_record* getRecordInstance( char*& bufferPtr );
+//		template<>
+//		static void appendChild<uint8_t>( pugi::xml_node& node,
+//						const string& variableName, uint8_t variable );
+//		static void appendChild( pugi::xml_node& node,
+//						const string& variableName, uint8_t variable );
+
+
+		static STDF_record* getRecordInstance( char* bufferPtr );
 
 		const uint8_t readU1( char*& bufferPtr );
 		const uint16_t readU2( char*& bufferPtr );
 		const uint16_t* readKU2( char*& bufferPtr, uint16_t k );
-		const int16_t readI2( char*& bufferPtr );
 		const uint32_t readU4( char*& bufferPtr );
+		const int8_t readI1( char*& bufferPtr );
+		const int16_t readI2( char*& bufferPtr );
+		const int32_t readI4( char*& bufferPtr );
 		const char readC1( char*& bufferPtr );
 		const string readCn( char*& bufferPtr );
 		const uint8_t readB1( char*& bufferPtr );
 		const uint8_t* readBn( char*& bufferPtr );
+		const float readR4( char*& bufferPtr );
 
 		virtual ~STDF_record()
 		{
@@ -263,13 +273,90 @@ class PRR : public STDF_record
 		uint32_t testTime;
 		string partId;
 		string partText;
-		uint8_t partFix[255];
+		uint8_t* partFix;
 
 		virtual void decodeData();
 
 	public:
 		PRR( int l, char*& d );
 		virtual void appendNode( pugi::xml_node& root );
+
+		virtual ~PRR();
 };
+
+/*Parametric Test Record*/
+class PTR : public STDF_record
+{
+	private:
+		uint32_t testNumber;
+		uint8_t headNumber;
+		uint8_t siteNumber;
+		uint8_t testFlag;
+		uint8_t parmFlag;
+		float result;
+		string testTxt;
+		string alarmId;
+		uint8_t optFlag;
+		int8_t resScal;
+		int8_t llmScal;
+		int8_t hlmScal;
+		float loLimit;
+		float hiLimit;
+		string units;
+		string cResFmt;
+		string cLlmFmt;
+		string cHlmFmt;
+		float loSpec;
+		float hiSpec;
+
+		virtual void decodeData();
+
+	public:
+		PTR( int l, char*& d );
+		virtual void appendNode( pugi::xml_node& root );
+};
+
+/*Functional Test Record*/
+class FTR : public STDF_record
+{
+	private:
+		uint32_t testNumber;
+		uint8_t headNumber;
+		uint8_t siteNumber;
+		uint8_t testFlag;
+		uint8_t optFlag;
+		uint32_t cycleCount;
+		uint32_t relativeVectorAddress;
+		uint32_t repeatCount;
+		uint32_t numFail;
+		int32_t xFailAddress;
+		int32_t yFailAddress;
+		int16_t vectorOffset;
+		uint16_t returnIndexCount;
+		uint16_t progIndexCount;
+		uint16_t* returnIndex;
+		uint8_t* returnState;
+		uint16_t* progIndex;
+		uint8_t* progState;
+		uint8_t* failPin;
+		string vectorName;
+		string timeSet;
+		string opCode;
+		string testTxt;
+		string alarmId;
+		string progTxt;
+		string resultTxt;
+		uint8_t patternGenNumber;
+		uint8_t* spinMap;
+
+		virtual void decodeData();
+
+	public:
+		FTR( int l, char*& d );
+		virtual void appendNode( pugi::xml_node& root );
+
+		virtual ~FTR();
+};
+
 
 #endif /* RECORD_H_ */
