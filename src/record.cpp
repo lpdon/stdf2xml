@@ -247,7 +247,7 @@ void FAR::decodeData()
 
 pugi::xml_node FAR::appendNode( pugi::xml_node& root )
 {
-	pugi::xml_node node = root.append_child( "record" );
+	pugi::xml_node node = root.append_child( "FAR" );
 
 	STDF_record::appendChild( node, "name", this->name );
 	STDF_record::appendChild( node, "length", this->length );
@@ -271,7 +271,7 @@ void ATR::decodeData()
 
 pugi::xml_node ATR::appendNode( pugi::xml_node& root )
 {
-	pugi::xml_node node = root.append_child( "record" );
+	pugi::xml_node node = root.append_child( "ATR" );
 
 	STDF_record::appendChild( node, "name", this->name );
 	STDF_record::appendChild( node, "length", this->length );
@@ -338,7 +338,7 @@ void MIR::decodeData()
 
 pugi::xml_node MIR::appendNode( pugi::xml_node& root )
 {
-	pugi::xml_node node = root.append_child( "record" );
+	pugi::xml_node node = root.append_child( "MIR" );
 
 	STDF_record::appendChild( node, "name", this->name );
 	STDF_record::appendChild( node, "length", this->length );
@@ -401,7 +401,7 @@ void MRR::decodeData()
 
 pugi::xml_node MRR::appendNode( pugi::xml_node& root )
 {
-	pugi::xml_node node = root.append_child( "record" );
+	pugi::xml_node node = root.append_child( "MRR" );
 
 	STDF_record::appendChild( node, "name", this->name );
 	STDF_record::appendChild( node, "length", this->length );
@@ -439,7 +439,7 @@ void PCR::decodeData()
 
 pugi::xml_node PCR::appendNode( pugi::xml_node& root )
 {
-	pugi::xml_node node = root.append_child( "record" );
+	pugi::xml_node node = root.append_child( "PCR" );
 
 	STDF_record::appendChild( node, "name", this->name );
 	STDF_record::appendChild( node, "length", this->length );
@@ -477,7 +477,7 @@ void PMR::decodeData()
 
 pugi::xml_node PMR::appendNode( pugi::xml_node& root )
 {
-	pugi::xml_node node = root.append_child( "record" );
+	pugi::xml_node node = root.append_child( "PMR" );
 
 	STDF_record::appendChild( node, "name", this->name );
 	STDF_record::appendChild( node, "length", this->length );
@@ -515,7 +515,7 @@ void HBR::decodeData()
 
 pugi::xml_node HBR::appendNode( pugi::xml_node& root )
 {
-	pugi::xml_node node = root.append_child( "record" );
+	pugi::xml_node node = root.append_child( "HBR" );
 
 	STDF_record::appendChild( node, "name", this->name );
 	STDF_record::appendChild( node, "length", this->length );
@@ -552,7 +552,7 @@ void SBR::decodeData()
 
 pugi::xml_node SBR::appendNode( pugi::xml_node& root )
 {
-	pugi::xml_node node = root.append_child( "record" );
+	pugi::xml_node node = root.append_child( "SBR" );
 
 	STDF_record::appendChild( node, "name", this->name );
 	STDF_record::appendChild( node, "length", this->length );
@@ -590,7 +590,7 @@ void PGR::decodeData()
 
 pugi::xml_node PGR::appendNode( pugi::xml_node& root )
 {
-	pugi::xml_node node = root.append_child( "record" );
+	pugi::xml_node node = root.append_child( "PGR" );
 
 	STDF_record::appendChild( node, "name", this->name );
 	STDF_record::appendChild( node, "length", this->length );
@@ -631,7 +631,7 @@ void RDR::decodeData()
 
 pugi::xml_node RDR::appendNode( pugi::xml_node& root )
 {
-	pugi::xml_node node = root.append_child( "record" );
+	pugi::xml_node node = root.append_child( "RDR" );
 
 	STDF_record::appendChild( node, "name", this->name );
 	STDF_record::appendChild( node, "length", this->length );
@@ -657,7 +657,7 @@ void PIR::decodeData()
 
 pugi::xml_node PIR::appendNode( pugi::xml_node& root )
 {
-	pugi::xml_node node = root.append_child( "record" );
+	pugi::xml_node node = root.append_child( "PIR" );
 
 	STDF_record::appendChild( node, "name", this->name );
 	STDF_record::appendChild( node, "length", this->length );
@@ -706,7 +706,7 @@ void PRR::decodeData()
 
 pugi::xml_node PRR::appendNode( pugi::xml_node& root )
 {
-	pugi::xml_node node = root.append_child( "record" );
+	pugi::xml_node node = root.append_child( "PRR" );
 
 	STDF_record::appendChild( node, "name", this->name );
 	STDF_record::appendChild( node, "length", this->length );
@@ -780,7 +780,7 @@ void PTR::decodeData()
 
 pugi::xml_node PTR::appendNode( pugi::xml_node& root )
 {
-	pugi::xml_node node = root.append_child( "record" );
+	pugi::xml_node node = root.append_child( "PTR" );
 
 	STDF_record::appendChild( node, "name", this->name );
 	STDF_record::appendChild( node, "length", this->length );
@@ -879,7 +879,7 @@ void FTR::decodeData()
 
 pugi::xml_node FTR::appendNode( pugi::xml_node& root )
 {
-	pugi::xml_node node = root.append_child( "record" );
+	pugi::xml_node node = root.append_child( "FTR" );
 
 	STDF_record::appendChild( node, "name", this->name );
 	STDF_record::appendChild( node, "length", this->length );
