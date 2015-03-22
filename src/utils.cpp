@@ -81,14 +81,18 @@ const string Utils::readCn( char*& bufferPtr )
 
 const uint16_t* Utils::readKU2( char*& bufferPtr, uint16_t k )
 {
-	uint16_t* retPtr = new uint16_t[k];
-
-	for( int i = 0; i < k; i++ )
+	if ( k > 0 )
 	{
-		memcpy( &retPtr[i], bufferPtr, 2 );
-		bufferPtr += 2;
+		uint16_t* retPtr = new uint16_t[k];
+
+		for( int i = 0; i < k; i++ )
+		{
+			memcpy( &retPtr[i], bufferPtr, 2 );
+			bufferPtr += 2;
+		}
+		return retPtr;
 	}
-	return retPtr;
+	return NULL;
 }
 
 const uint8_t Utils::readB1( char*& bufferPtr )
@@ -117,4 +121,38 @@ const float Utils::readR4( char*& bufferPtr )
 	memcpy( &value, bufferPtr, 4 );
 	bufferPtr += 4;
 	return value;
+}
+
+const uint8_t* Utils::readKN1( char*& bufferPtr, uint16_t k )
+{
+	if ( k > 0 )
+	{
+		uint8_t* retPtr = new uint8_t[k];
+
+		for( int i = 0; i < k; i++ )
+		{
+			memcpy( &retPtr[i], bufferPtr, 1 );
+			bufferPtr ++;
+		}
+		return retPtr;
+	}
+	else
+	{
+		return NULL;
+	}
+}
+
+const uint8_t* Utils::readDn( char*& bufferPtr )
+{
+	uint16_t length = Utils::readU2( bufferPtr );
+
+	if ( length > 0 )
+	{
+		uint8_t* tempBuffer = new uint8_t[length + 1];
+		memcpy( tempBuffer, bufferPtr, length );
+		tempBuffer[length + 1] = 0;
+		bufferPtr += length;
+		return tempBuffer;
+	}
+	return NULL;
 }

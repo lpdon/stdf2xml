@@ -33,8 +33,8 @@
 // In absence of PUGIXML_CLASS/PUGIXML_FUNCTION definitions PUGIXML_API is used instead
 
 // Tune these constants to adjust memory-related behavior
-// #define PUGIXML_MEMORY_PAGE_SIZE 32768
-// #define PUGIXML_MEMORY_OUTPUT_STACK 10240
+#define PUGIXML_MEMORY_PAGE_SIZE 32768
+#define PUGIXML_MEMORY_OUTPUT_STACK 10240
 // #define PUGIXML_MEMORY_XPATH_PAGE_SIZE 4096
 
 // Uncomment this to switch to header-only version

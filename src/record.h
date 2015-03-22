@@ -30,18 +30,11 @@ class STDF_record
 		static string getName();
 		char* getData();
 
-		virtual void appendNode( pugi::xml_node& root ) = 0;
+		virtual pugi::xml_node appendNode( pugi::xml_node& root ) = 0;
 
 		template<typename T>
 		static void appendChild( pugi::xml_node& node,
 				const string& variableName, T variable );
-
-//		template<>
-//		static void appendChild<uint8_t>( pugi::xml_node& node,
-//						const string& variableName, uint8_t variable );
-//		static void appendChild( pugi::xml_node& node,
-//						const string& variableName, uint8_t variable );
-
 
 		static STDF_record* getRecordInstance( char* bufferPtr );
 
@@ -57,6 +50,8 @@ class STDF_record
 		const uint8_t readB1( char*& bufferPtr );
 		const uint8_t* readBn( char*& bufferPtr );
 		const float readR4( char*& bufferPtr );
+		const uint8_t* readKN1( char*& bufferPtr, uint16_t k );
+		const uint8_t* readDn( char*& bufferPtr );
 
 		virtual ~STDF_record()
 		{
@@ -84,7 +79,7 @@ class FAR: public STDF_record
 
 	public:
 		FAR( int l, char*& d );
-		virtual void appendNode( pugi::xml_node& root );
+		virtual pugi::xml_node appendNode( pugi::xml_node& root );
 };
 
 /*Audit Trail Record*/
@@ -98,7 +93,7 @@ class ATR: public STDF_record
 
 	public:
 		ATR( int l, char*& d );
-		virtual void appendNode( pugi::xml_node& root );
+		virtual pugi::xml_node appendNode( pugi::xml_node& root );
 
 };
 
@@ -149,7 +144,23 @@ class MIR: public STDF_record
 
 	public:
 		MIR( int l, char*& d );
-		virtual void appendNode( pugi::xml_node& root );
+		virtual pugi::xml_node appendNode( pugi::xml_node& root );
+};
+
+/*Master Results Record*/
+class MRR : public STDF_record
+{
+	private:
+		uint32_t finishTime;
+		char dispositionCode;
+		string userDesc;
+		string excDesc;
+
+		virtual void decodeData();
+
+	public:
+		MRR( int l, char*& d );
+		virtual pugi::xml_node appendNode( pugi::xml_node& root );
 };
 
 /*Part Count Record*/
@@ -168,7 +179,7 @@ class PCR: public STDF_record
 
 	public:
 		PCR( int l, char*& d );
-		virtual void appendNode( pugi::xml_node& root );
+		virtual pugi::xml_node appendNode( pugi::xml_node& root );
 };
 
 /*Pin Map Record*/
@@ -187,7 +198,7 @@ class PMR : public STDF_record
 
 	public:
 		PMR( int l, char*& d );
-		virtual void appendNode( pugi::xml_node& root );
+		virtual pugi::xml_node appendNode( pugi::xml_node& root );
 };
 
 /*Hardware Bin Record*/
@@ -205,7 +216,7 @@ class HBR : public STDF_record
 
 	public:
 		HBR( int l, char*& d );
-		virtual void appendNode( pugi::xml_node& root );
+		virtual pugi::xml_node appendNode( pugi::xml_node& root );
 };
 
 /*Software Bin Record*/
@@ -223,7 +234,7 @@ class SBR : public STDF_record
 
 	public:
 		SBR( int l, char*& d );
-		virtual void appendNode( pugi::xml_node& root );
+		virtual pugi::xml_node appendNode( pugi::xml_node& root );
 };
 
 /*Pin Group Record*/
@@ -233,15 +244,31 @@ class PGR : public STDF_record
 		uint16_t groupIndex;
 		string groupName;
 		uint16_t indexCount;
-		uint16_t* pmrIndex;
+		const uint16_t* pmrIndex;
 
 		virtual void decodeData();
 
 	public:
 		PGR( int l, char*& d );
-		virtual void appendNode( pugi::xml_node& root );
+		virtual pugi::xml_node appendNode( pugi::xml_node& root );
 
 		virtual ~PGR();
+};
+
+/*Retest Data Record*/
+class RDR : public STDF_record
+{
+	private:
+		uint16_t numBins;
+		const uint16_t* rtstBin;
+
+		virtual void decodeData();
+
+	public:
+		RDR( int l, char*& d );
+		virtual pugi::xml_node appendNode( pugi::xml_node& root );
+
+		virtual ~RDR();
 };
 
 /*Part Information Record*/
@@ -255,7 +282,7 @@ class PIR : public STDF_record
 
 	public:
 		PIR( int l, char*& d );
-		virtual void appendNode( pugi::xml_node& root );
+		virtual pugi::xml_node appendNode( pugi::xml_node& root );
 };
 
 /*Part Results Record*/
@@ -273,13 +300,13 @@ class PRR : public STDF_record
 		uint32_t testTime;
 		string partId;
 		string partText;
-		uint8_t* partFix;
+		const uint8_t* partFix;
 
 		virtual void decodeData();
 
 	public:
 		PRR( int l, char*& d );
-		virtual void appendNode( pugi::xml_node& root );
+		virtual pugi::xml_node appendNode( pugi::xml_node& root );
 
 		virtual ~PRR();
 };
@@ -313,7 +340,7 @@ class PTR : public STDF_record
 
 	public:
 		PTR( int l, char*& d );
-		virtual void appendNode( pugi::xml_node& root );
+		virtual pugi::xml_node appendNode( pugi::xml_node& root );
 };
 
 /*Functional Test Record*/
@@ -334,11 +361,11 @@ class FTR : public STDF_record
 		int16_t vectorOffset;
 		uint16_t returnIndexCount;
 		uint16_t progIndexCount;
-		uint16_t* returnIndex;
-		uint8_t* returnState;
-		uint16_t* progIndex;
-		uint8_t* progState;
-		uint8_t* failPin;
+		const uint16_t* returnIndex;
+		const uint8_t* returnState;
+		const uint16_t* progIndex;
+		const uint8_t* progState;
+		const uint8_t* failPin;
 		string vectorName;
 		string timeSet;
 		string opCode;
@@ -347,13 +374,13 @@ class FTR : public STDF_record
 		string progTxt;
 		string resultTxt;
 		uint8_t patternGenNumber;
-		uint8_t* spinMap;
+		const uint8_t* spinMap;
 
 		virtual void decodeData();
 
 	public:
 		FTR( int l, char*& d );
-		virtual void appendNode( pugi::xml_node& root );
+		virtual pugi::xml_node appendNode( pugi::xml_node& root );
 
 		virtual ~FTR();
 };

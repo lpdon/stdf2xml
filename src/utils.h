@@ -17,6 +17,9 @@ using namespace std;
 #define VNAME(x) #x
 #define VDUMP(x) std::cout << #x << " " << x << std::endl
 
+#define DELETE_PTR( x ) if( x ) delete x
+#define DELETE_BPTR( x ) if( x ) delete [] x
+
 class Utils
 {
 	public:
@@ -33,6 +36,8 @@ class Utils
 		static const uint8_t readB1( char*& bufferPtr );
 		static const uint8_t* readBn( char*& bufferPtr );
 		static const float readR4( char*& bufferPtr );
+		static const uint8_t* readKN1( char*& bufferPtr, uint16_t k );
+		static const uint8_t* readDn( char*& bufferPtr );
 };
 
 #endif /* UTILS_H_ */
