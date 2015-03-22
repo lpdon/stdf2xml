@@ -16,6 +16,22 @@ const uint8_t Utils::readU1( char*& bufferPtr )
 	return value;
 }
 
+const uint8_t* Utils::readKU1( char*& bufferPtr, uint16_t k )
+{
+	if ( k > 0 )
+	{
+		uint8_t* retPtr = new uint8_t[k];
+
+		for( int i = 0; i < k; i++ )
+		{
+			memcpy( &retPtr[i], bufferPtr, 1 );
+			bufferPtr += 1;
+		}
+		return retPtr;
+	}
+	return NULL;
+}
+
 const uint16_t Utils::readU2( char*& bufferPtr )
 {
 	uint16_t value;
@@ -121,6 +137,22 @@ const float Utils::readR4( char*& bufferPtr )
 	memcpy( &value, bufferPtr, 4 );
 	bufferPtr += 4;
 	return value;
+}
+
+const float* Utils::readKR4( char*& bufferPtr, uint16_t k )
+{
+	if ( k > 0 )
+	{
+		float* retPtr = new float[k];
+
+		for( int i = 0; i < k; i++ )
+		{
+			memcpy( &retPtr[i], bufferPtr, 4 );
+			bufferPtr += 4;
+		}
+		return retPtr;
+	}
+	return NULL;
 }
 
 const uint8_t* Utils::readKN1( char*& bufferPtr, uint16_t k )

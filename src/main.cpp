@@ -48,6 +48,7 @@ int main( int argc, char* argv[] )
 		file.read( memblock, size );
 		file.close();
 
+//		std::cout << "<?xml version=\"1.0\"?>" << endl;
 //		std::cout << "<root>" << endl;
 
 		while (size > 0)
@@ -82,6 +83,7 @@ int main( int argc, char* argv[] )
 		}
 		delete[] memblock;
 
+//		std::cout << "</xml>" << endl;
 //		std::cout << "</root>" << endl;
 		//doc.print( std::cout );
 		doc.save_file( "test.xml" );

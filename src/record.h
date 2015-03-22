@@ -39,6 +39,7 @@ class STDF_record
 		static STDF_record* getRecordInstance( char* bufferPtr );
 
 		const uint8_t readU1( char*& bufferPtr );
+		const uint8_t* readKU1( char*& bufferPtr, uint16_t k );
 		const uint16_t readU2( char*& bufferPtr );
 		const uint16_t* readKU2( char*& bufferPtr, uint16_t k );
 		const uint32_t readU4( char*& bufferPtr );
@@ -50,6 +51,7 @@ class STDF_record
 		const uint8_t readB1( char*& bufferPtr );
 		const uint8_t* readBn( char*& bufferPtr );
 		const float readR4( char*& bufferPtr );
+		const float* readKR4( char*& bufferPtr, uint16_t k);
 		const uint8_t* readKN1( char*& bufferPtr, uint16_t k );
 		const uint8_t* readDn( char*& bufferPtr );
 
@@ -271,6 +273,105 @@ class RDR : public STDF_record
 		virtual ~RDR();
 };
 
+/*Site Description Record*/
+class SDR : public STDF_record
+{
+	private:
+		uint8_t headNumber;
+		uint8_t siteGroup;
+		uint8_t siteCount;
+		const uint8_t* siteNumber;
+		string handType;
+		string handId;
+		string cardType;
+		string cardId;
+		string loadType;
+		string loadId;
+		string dibType;
+		string dibId;
+		string cableType;
+		string cableId;
+		string contType;
+		string contId;
+		string laserType;
+		string laserId;
+		string extraType;
+		string extraId;
+
+		virtual void decodeData();
+
+	public:
+		SDR( int l, char*& d );
+		virtual pugi::xml_node appendNode( pugi::xml_node& root );
+
+		virtual ~SDR();
+};
+
+/*Wafer Information Record*/
+class WIR : public STDF_record
+{
+	private:
+		uint8_t headNumber;
+		uint8_t siteGroup;
+		uint32_t startTime;
+		string waferId;
+
+		virtual void decodeData();
+
+	public:
+		WIR( int l, char*& d );
+		virtual pugi::xml_node appendNode( pugi::xml_node& root );
+};
+
+/*Wafer Results Record*/
+class WRR : public STDF_record
+{
+	private:
+		uint8_t headNumber;
+		uint8_t siteGroup;
+		uint32_t finishTime;
+		uint32_t partCount;
+		uint32_t retestCount;
+		uint32_t abortCount;
+		uint32_t goodCount;
+		uint32_t funcCount;
+		string waferId;
+		string fabWaferId;
+		string frameId;
+		string maskId;
+		string userDescription;
+		string execDescription;
+
+		virtual void decodeData();
+
+	public:
+		WRR( int l, char*& d);
+		virtual pugi::xml_node appendNode( pugi::xml_node& root );
+
+};
+
+/*Wafer Configuration Record*/
+class WCR : public STDF_record
+{
+	private:
+		float waferSize;
+		float dieHeight;
+		float dieWidth;
+		uint8_t waferUnits;
+		char waferFlat;
+		int16_t centerX;
+		int16_t centerY;
+		char posX;
+		char posY;
+
+		virtual void decodeData();
+
+	public:
+		WCR( int l, char*& d);
+		virtual pugi::xml_node appendNode( pugi::xml_node& root );
+
+};
+
 /*Part Information Record*/
 class PIR : public STDF_record
 {
@@ -311,6 +412,34 @@ class PRR : public STDF_record
 		virtual ~PRR();
 };
 
+/*Test Synopsis Record*/
+class TSR : public STDF_record
+{
+	private:
+		uint8_t headNumber;
+		uint8_t siteNumber;
+		char testType;
+		uint32_t testNumber;
+		uint32_t execCount;
+		uint32_t failCount;
+		uint32_t alarmCount;
+		string testName;
+		string seqName;
+		string testLabel;
+		uint8_t optFlag;
+		float testTime;
+		float testMin;
+		float testMax;
+		float testSums;
+		float testSquares;
+
+		virtual void decodeData();
+
+	public:
+		TSR( int l, char*& d );
+		virtual pugi::xml_node appendNode( pugi::xml_node& root );
+};
+
 /*Parametric Test Record*/
 class PTR : public STDF_record
 {
@@ -341,6 +470,47 @@ class PTR : public STDF_record
 	public:
 		PTR( int l, char*& d );
 		virtual pugi::xml_node appendNode( pugi::xml_node& root );
+};
+
+/*Multiple-Result Parametric Record*/
+class MPR : public STDF_record
+{
+	private:
+		uint32_t testNumber;
+		uint8_t headNumber;
+		uint8_t siteNumber;
+		uint8_t testFlag;
+		uint8_t parmFlag;
+		uint16_t returnIndexCount;
+		uint16_t resultCount;
+		const uint8_t* returnState;
+		const float* returnResult;
+		string testText;
+		string alarmId;
+		uint8_t optFlag;
+		int8_t resScal;
+		int8_t llmScal;
+		int8_t hlmScal;
+		float loLimit;
+		float hiLimit;
+		float startInput;
+		float incrementInput;
+		const uint16_t* returnIndex;
+		string units;
+		string unitsInput;
+		string cResFmt;
+		string cLlmFmt;
+		string cHlmFmt;
+		float loSpec;
+		float hiSpec;
+
+		virtual void decodeData();
+
+	public:
+		MPR( int l, char*& d );
+		virtual pugi::xml_node appendNode( pugi::xml_node& root );
+
+		virtual ~MPR();
 };
 
 /*Functional Test Record*/
@@ -385,5 +555,41 @@ class FTR : public STDF_record
 		virtual ~FTR();
 };
 
+/*Begin Program Section Record*/
+class BPS : public STDF_record
+{
+	private:
+		string seqName;
+
+		virtual void decodeData();
+
+	public:
+		BPS( int l, char*& d );
+		virtual pugi::xml_node appendNode( pugi::xml_node& root );
+};
+
+/*End Program Section Record*/
+class EPS : public STDF_record
+{
+	private:
+		virtual void decodeData();
+
+	public:
+		EPS( int l, char*& d );
+		virtual pugi::xml_node appendNode( pugi::xml_node& root );
+};
+
+/*Datalog Text Record*/
+class DTR : public STDF_record
+{
+	private:
+		string textData;
+
+		virtual void decodeData();
+
+	public:
+		DTR( int l, char*& d );
+		virtual pugi::xml_node appendNode( pugi::xml_node& root );
+};
 
 #endif /* RECORD_H_ */

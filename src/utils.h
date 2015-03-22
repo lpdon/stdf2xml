@@ -25,6 +25,7 @@ class Utils
 	public:
 		static uint32_t getFileSize( std::ifstream& file );
 		static const uint8_t readU1( char*& bufferPtr );
+		static const uint8_t* readKU1( char*& bufferPtr, uint16_t k );
 		static const uint16_t readU2( char*& bufferPtr );
 		static const uint16_t* readKU2( char*& bufferPtr, uint16_t k );
 		static const uint32_t readU4( char*& bufferPtr );
@@ -36,6 +37,7 @@ class Utils
 		static const uint8_t readB1( char*& bufferPtr );
 		static const uint8_t* readBn( char*& bufferPtr );
 		static const float readR4( char*& bufferPtr );
+		static const float* readKR4( char*& bufferPtr, uint16_t k );
 		static const uint8_t* readKN1( char*& bufferPtr, uint16_t k );
 		static const uint8_t* readDn( char*& bufferPtr );
 };
