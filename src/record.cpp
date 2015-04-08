@@ -1,10 +1,32 @@
+/*The MIT License (MIT)
+
+Copyright (c) 2015 lpdon
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.*/
+
 #include "record.h"
 
 #include <stdlib.h>
 #include "utils.h"
 #include <string.h>
 
-STDF_record* STDF_record::getRecordInstance( char* bufferPtr )
+STDF_Record* STDF_Record::getRecordInstance( char* bufferPtr )
 {
 	uint16_t length = Utils::readU2( bufferPtr );
 	uint8_t type = Utils::readU1( bufferPtr );
@@ -40,6 +62,8 @@ STDF_record* STDF_record::getRecordInstance( char* bufferPtr )
 					return new PMR( length, bufferPtr );
 				case 62:
 					return new PGR( length, bufferPtr );
+				case 63:
+					return new PLR( length, bufferPtr );
 				case 70:
 					return new RDR( length, bufferPtr );
 				case 80:
@@ -122,7 +146,7 @@ STDF_record* STDF_record::getRecordInstance( char* bufferPtr )
 }
 
 template<>
-void STDF_record::appendChild<uint8_t>( pugi::xml_node& node,
+void STDF_Record::appendChild<uint8_t>( pugi::xml_node& node,
 				const string& variableName, uint8_t variable )
 {
 	pugi::xml_node childNode = node.append_child( variableName.c_str() );
@@ -130,7 +154,16 @@ void STDF_record::appendChild<uint8_t>( pugi::xml_node& node,
 				SSTR( static_cast<uint16_t>( variable ) ).c_str() );
 }
 
-const uint8_t STDF_record::readU1( char*& bufferPtr )
+template<>
+void STDF_Record::appendChild<string>( pugi::xml_node& node,
+				const string& variableName, string variable )
+{
+	const string value = "\"" + variable + "\"";
+	pugi::xml_node childNode = node.append_child( variableName.c_str() );
+		childNode.append_child( pugi::node_pcdata ).set_value( value.c_str() );
+}
+
+const uint8_t STDF_Record::readU1( char*& bufferPtr )
 {
 	if ( this->bytesLeft > 0 )
 	{
@@ -140,7 +173,7 @@ const uint8_t STDF_record::readU1( char*& bufferPtr )
 	return 0;
 }
 
-const uint8_t* STDF_record::readKU1( char*& bufferPtr, uint16_t k )
+const uint8_t* STDF_Record::readKU1( char*& bufferPtr, uint16_t k )
 {
 	if ( this->bytesLeft > 0 )
 	{
@@ -150,7 +183,7 @@ const uint8_t* STDF_record::readKU1( char*& bufferPtr, uint16_t k )
 	return NULL;
 }
 
-const uint16_t STDF_record::readU2( char*& bufferPtr )
+const uint16_t STDF_Record::readU2( char*& bufferPtr )
 {
 	if ( this->bytesLeft > 0 )
 	{
@@ -160,7 +193,7 @@ const uint16_t STDF_record::readU2( char*& bufferPtr )
 	return 0;
 }
 
-const uint32_t STDF_record::readU4( char*& bufferPtr )
+const uint32_t STDF_Record::readU4( char*& bufferPtr )
 {
 	if ( this->bytesLeft > 0 )
 	{
@@ -170,7 +203,7 @@ const uint32_t STDF_record::readU4( char*& bufferPtr )
 	return 0;
 }
 
-const int8_t STDF_record::readI1( char*& bufferPtr )
+const int8_t STDF_Record::readI1( char*& bufferPtr )
 {
 	if ( this->bytesLeft > 0 )
 	{
@@ -180,7 +213,7 @@ const int8_t STDF_record::readI1( char*& bufferPtr )
 	return 0;
 }
 
-const int16_t STDF_record::readI2( char*& bufferPtr )
+const int16_t STDF_Record::readI2( char*& bufferPtr )
 {
 	if ( this->bytesLeft > 0 )
 	{
@@ -190,7 +223,7 @@ const int16_t STDF_record::readI2( char*& bufferPtr )
 	return 0;
 }
 
-const int32_t STDF_record::readI4( char*& bufferPtr )
+const int32_t STDF_Record::readI4( char*& bufferPtr )
 {
 	if ( this->bytesLeft > 0 )
 	{
@@ -200,7 +233,7 @@ const int32_t STDF_record::readI4( char*& bufferPtr )
 	return 0;
 }
 
-const char STDF_record::readC1( char*& bufferPtr )
+const char STDF_Record::readC1( char*& bufferPtr )
 {
 	if ( this->bytesLeft > 0 )
 	{
@@ -210,7 +243,7 @@ const char STDF_record::readC1( char*& bufferPtr )
 	return ' ';
 }
 
-const string STDF_record::readCn( char*& bufferPtr )
+const string STDF_Record::readCn( char*& bufferPtr )
 {
 	if ( this->bytesLeft > 0 )
 	{
@@ -222,7 +255,29 @@ const string STDF_record::readCn( char*& bufferPtr )
 	return string();
 }
 
-const uint16_t* STDF_record::readKU2( char*& bufferPtr, uint16_t k )
+const string* STDF_Record::readKCn( char*& bufferPtr, uint16_t k )
+{
+	if ( this->bytesLeft > 0 )
+	{
+		if ( k > 0 )
+		{
+			string* retPtr = new string[k];
+
+			for( int i = 0; i < k; i++ )
+			{
+				uint16_t length = Utils::readU1( bufferPtr );
+				bufferPtr--;
+				bytesLeft -= length + 1;
+				retPtr[k] = readCn( bufferPtr );
+			}
+			return retPtr;
+		}
+		return NULL;
+	}
+	return NULL;
+}
+
+const uint16_t* STDF_Record::readKU2( char*& bufferPtr, uint16_t k )
 {
 	if ( this->bytesLeft > 0 )
 	{
@@ -232,7 +287,7 @@ const uint16_t* STDF_record::readKU2( char*& bufferPtr, uint16_t k )
 	return NULL;
 }
 
-const uint8_t STDF_record::readB1( char*& bufferPtr )
+const uint8_t STDF_Record::readB1( char*& bufferPtr )
 {
 	if ( this->bytesLeft > 0 )
 	{
@@ -242,7 +297,7 @@ const uint8_t STDF_record::readB1( char*& bufferPtr )
 	return 0;
 }
 
-const uint8_t* STDF_record::readBn( char*& bufferPtr )
+const uint8_t* STDF_Record::readBn( char*& bufferPtr )
 {
 	if ( this->bytesLeft > 0 )
 	{
@@ -254,7 +309,7 @@ const uint8_t* STDF_record::readBn( char*& bufferPtr )
 	return NULL;
 }
 
-const float STDF_record::readR4( char*& bufferPtr )
+const float STDF_Record::readR4( char*& bufferPtr )
 {
 	if ( this->bytesLeft > 0 )
 	{
@@ -264,7 +319,7 @@ const float STDF_record::readR4( char*& bufferPtr )
 	return 0;
 }
 
-const float* STDF_record::readKR4( char*& bufferPtr, uint16_t k )
+const float* STDF_Record::readKR4( char*& bufferPtr, uint16_t k )
 {
 	if ( this->bytesLeft > 0 )
 	{
@@ -274,7 +329,7 @@ const float* STDF_record::readKR4( char*& bufferPtr, uint16_t k )
 	return NULL;
 }
 
-const uint8_t* STDF_record::readKN1( char*& bufferPtr, uint16_t k )
+const uint8_t* STDF_Record::readKN1( char*& bufferPtr, uint16_t k )
 {
 	if ( this->bytesLeft > 0 )
 	{
@@ -284,7 +339,7 @@ const uint8_t* STDF_record::readKN1( char*& bufferPtr, uint16_t k )
 	return NULL;
 }
 
-const uint8_t* STDF_record::readDn( char*& bufferPtr )
+const uint8_t* STDF_Record::readDn( char*& bufferPtr )
 {
 	if ( this->bytesLeft > 0 )
 	{
@@ -296,13 +351,13 @@ const uint8_t* STDF_record::readDn( char*& bufferPtr )
 	return NULL;
 }
 
-STDF_record::STDF_record( string name, uint16_t length, char*& data ) :
+STDF_Record::STDF_Record( string name, uint16_t length, char*& data ) :
 		name( name ), length( length ), data( data ), bytesLeft( length )
 {
 }
 
 FAR::FAR( int l, char*& d ) :
-		STDF_record( "FAR", l, d ), cpuType( 0 ), stdfVersion( 0 )
+		STDF_Record( "FAR", l, d ), cpuType( 0 ), stdfVersion( 0 )
 {
 	decodeData();
 }
@@ -317,16 +372,16 @@ pugi::xml_node FAR::appendNode( pugi::xml_node& root )
 {
 	pugi::xml_node node = root.append_child( "FAR" );
 
-	STDF_record::appendChild( node, "name", this->name );
-	STDF_record::appendChild( node, "length", this->length );
-	STDF_record::appendChild( node, "CPU", this->cpuType );
-	STDF_record::appendChild( node, "Version", static_cast<uint16_t>( this->stdfVersion ) );
+	STDF_Record::appendChild( node, "NAME", this->name );
+	STDF_Record::appendChild( node, "REC_LEN", this->length );
+	STDF_Record::appendChild( node, "CPU_TYPE", this->cpuType );
+	STDF_Record::appendChild( node, "STDF_VER", this->stdfVersion );
 
 	return node;
 }
 
 ATR::ATR( int l, char*& d ) :
-		STDF_record( "ATR", l, d ), modTime( 0 )
+		STDF_Record( "ATR", l, d ), modTime( 0 )
 {
 	decodeData();
 }
@@ -341,16 +396,16 @@ pugi::xml_node ATR::appendNode( pugi::xml_node& root )
 {
 	pugi::xml_node node = root.append_child( "ATR" );
 
-	STDF_record::appendChild( node, "name", this->name );
-	STDF_record::appendChild( node, "length", this->length );
-	STDF_record::appendChild( node, "ModTime", this->modTime );
-	STDF_record::appendChild( node, "CommandLine", this->cmdLine );
+	STDF_Record::appendChild( node, "NAME", this->name );
+	STDF_Record::appendChild( node, "REC_LEN", this->length );
+	STDF_Record::appendChild( node, "MOD_TIME", this->modTime );
+	STDF_Record::appendChild( node, "CMD_LINE", this->cmdLine );
 
 	return node;
 }
 
 MIR::MIR( int l, char*& d ) :
-		STDF_record( "MIR", l, d ),
+		STDF_Record( "MIR", l, d ),
 		setupTime( 0 ),
 		startTime( 0 ),
 		stationNumber( 0 ),
@@ -408,51 +463,52 @@ pugi::xml_node MIR::appendNode( pugi::xml_node& root )
 {
 	pugi::xml_node node = root.append_child( "MIR" );
 
-	STDF_record::appendChild( node, "name", this->name );
-	STDF_record::appendChild( node, "length", this->length );
-	STDF_record::appendChild( node, "setupTime", this->setupTime );
-	STDF_record::appendChild( node, "startTime", this->startTime );
-	STDF_record::appendChild( node, "stationNumber", this->stationNumber );
-	STDF_record::appendChild( node, "modeCode", this->modeCode );
-	STDF_record::appendChild( node, "retestCode", this->retestCode );
-	STDF_record::appendChild( node, "protectionCode", this->protectionCode );
-	STDF_record::appendChild( node, "burnInTime", this->burnInTime );
-	STDF_record::appendChild( node, "commmandModeCode", this->commmandModeCode );
-	STDF_record::appendChild( node, "lotId", this->lotId );
-	STDF_record::appendChild( node, "partType", this->partType );
-	STDF_record::appendChild( node, "nodeName", this->nodeName );
-	STDF_record::appendChild( node, "testerType", this->testerType );
-	STDF_record::appendChild( node, "jobName", this->jobName );
-	STDF_record::appendChild( node, "jobRevision", this->jobRevision );
-	STDF_record::appendChild( node, "sublotId", this->sublotId );
-	STDF_record::appendChild( node, "operatorName", this->operatorName );
-	STDF_record::appendChild( node, "execType", this->execType );
-	STDF_record::appendChild( node, "execVer", this->execVer );
-	STDF_record::appendChild( node, "testCode", this->testCode );
-	STDF_record::appendChild( node, "testTemperature", this->testTemperature );
-	STDF_record::appendChild( node, "auxFile", this->auxFile );
-	STDF_record::appendChild( node, "pkgType", this->pkgType );
-	STDF_record::appendChild( node, "familyId", this->familyId );
-	STDF_record::appendChild( node, "dateCode", this->dateCode );
-	STDF_record::appendChild( node, "facilityId", this->facilityId );
-	STDF_record::appendChild( node, "floorId", this->floorId );
-	STDF_record::appendChild( node, "processId", this->processId );
-	STDF_record::appendChild( node, "operationFrequency", this->operationFrequency );
-	STDF_record::appendChild( node, "specName", this->specName );
-	STDF_record::appendChild( node, "specVer", this->specVer );
-	STDF_record::appendChild( node, "flowId", this->flowId );
-	STDF_record::appendChild( node, "setupId", this->setupId );
-	STDF_record::appendChild( node, "designRevision", this->designRevision );
-	STDF_record::appendChild( node, "engId", this->engId );
-	STDF_record::appendChild( node, "romCode", this->romCode );
-	STDF_record::appendChild( node, "serialNum", this->serialNum );
-	STDF_record::appendChild( node, "supervisiorName", this->supervisiorName );
+	STDF_Record::appendChild( node, "NAME", this->name );
+	STDF_Record::appendChild( node, "REC_LEN", this->length );
+	STDF_Record::appendChild( node, "SETUP_T", this->setupTime );
+	STDF_Record::appendChild( node, "START_T", this->startTime );
+	STDF_Record::appendChild( node, "STAT_NUM", this->stationNumber );
+	STDF_Record::appendChild( node, "MODE_COD", this->modeCode );
+	STDF_Record::appendChild( node, "RTST_COD", this->retestCode );
+	STDF_Record::appendChild( node, "PROT_COD", this->protectionCode );
+	STDF_Record::appendChild( node, "BURN_TIM", this->burnInTime );
+	STDF_Record::appendChild( node, "CMOD_COD", this->commmandModeCode );
+	STDF_Record::appendChild( node, "LOT_ID", this->lotId );
+	STDF_Record::appendChild( node, "PART_TYP", this->partType );
+	STDF_Record::appendChild( node, "NODE_NAM", this->nodeName );
+	STDF_Record::appendChild( node, "TSTR_TYP", this->testerType );
+	STDF_Record::appendChild( node, "JOB_NAM", this->jobName );
+	STDF_Record::appendChild( node, "JOB_REV", this->jobRevision );
+	STDF_Record::appendChild( node, "SBLOT_ID", this->sublotId );
+	STDF_Record::appendChild( node, "OPER_NAM", this->operatorName );
+	STDF_Record::appendChild( node, "EXEC_TYP", this->execType );
+	STDF_Record::appendChild( node, "EXEC_VER", this->execVer );
+	STDF_Record::appendChild( node, "TEST_COD", this->testCode );
+	STDF_Record::appendChild( node, "TST_TEMP", this->testTemperature );
+	STDF_Record::appendChild( node, "USER_TXT", this->userText );
+	STDF_Record::appendChild( node, "AUX_FILE", this->auxFile );
+	STDF_Record::appendChild( node, "PKG_TYP", this->pkgType );
+	STDF_Record::appendChild( node, "FAMLY_ID", this->familyId );
+	STDF_Record::appendChild( node, "DATE_COD", this->dateCode );
+	STDF_Record::appendChild( node, "FACIL_ID", this->facilityId );
+	STDF_Record::appendChild( node, "FLOOR_ID", this->floorId );
+	STDF_Record::appendChild( node, "PROC_ID", this->processId );
+	STDF_Record::appendChild( node, "OPER_FRQ", this->operationFrequency );
+	STDF_Record::appendChild( node, "SPEC_NAM", this->specName );
+	STDF_Record::appendChild( node, "SPEC_VER", this->specVer );
+	STDF_Record::appendChild( node, "FLOW_ID", this->flowId );
+	STDF_Record::appendChild( node, "SETUP_ID", this->setupId );
+	STDF_Record::appendChild( node, "DSGN_REV", this->designRevision );
+	STDF_Record::appendChild( node, "ENG_ID", this->engId );
+	STDF_Record::appendChild( node, "ROM_COD", this->romCode );
+	STDF_Record::appendChild( node, "SERL_NUM", this->serialNum );
+	STDF_Record::appendChild( node, "SUPR_NAM", this->supervisiorName );
 
 	return node;
 }
 
 MRR::MRR( int l, char*& d ) :
-		STDF_record( "MRR", l, d ),
+		STDF_Record( "MRR", l, d ),
 		finishTime( 0 ),
 		dispositionCode( ' ' )
 {
@@ -471,18 +527,18 @@ pugi::xml_node MRR::appendNode( pugi::xml_node& root )
 {
 	pugi::xml_node node = root.append_child( "MRR" );
 
-	STDF_record::appendChild( node, "name", this->name );
-	STDF_record::appendChild( node, "length", this->length );
-	STDF_record::appendChild( node, "FinishTime", this->finishTime );
-	STDF_record::appendChild( node, "DispositionCode", this->dispositionCode );
-	STDF_record::appendChild( node, "UserDesc", this->userDesc );
-	STDF_record::appendChild( node, "ExcDesc", this->excDesc );
+	STDF_Record::appendChild( node, "NAME", this->name );
+	STDF_Record::appendChild( node, "REC_LEN", this->length );
+	STDF_Record::appendChild( node, "FINISH_T", this->finishTime );
+	STDF_Record::appendChild( node, "DISP_COD", this->dispositionCode );
+	STDF_Record::appendChild( node, "USR_DESC", this->userDesc );
+	STDF_Record::appendChild( node, "EXC_DESC", this->excDesc );
 
 	return node;
 }
 
 PCR::PCR( int l, char*& d ) :
-		STDF_record( "PCR", l, d ),
+		STDF_Record( "PCR", l, d ),
 		headNumber( 0 ),
 		siteNumber( 0 ),
 		partCount( 0 ),
@@ -509,21 +565,21 @@ pugi::xml_node PCR::appendNode( pugi::xml_node& root )
 {
 	pugi::xml_node node = root.append_child( "PCR" );
 
-	STDF_record::appendChild( node, "name", this->name );
-	STDF_record::appendChild( node, "length", this->length );
-	STDF_record::appendChild( node, "HeadNumber", this->headNumber );
-	STDF_record::appendChild( node, "SiteNumber", this->siteNumber );
-	STDF_record::appendChild( node, "PartCount", this->partCount );
-	STDF_record::appendChild( node, "RetestCount", this->retestCount );
-	STDF_record::appendChild( node, "AbortCount", this->abortCount );
-	STDF_record::appendChild( node, "GoodCount", this->goodCount );
-	STDF_record::appendChild( node, "FunctionalCount", this->functionalCount );
+	STDF_Record::appendChild( node, "NAME", this->name );
+	STDF_Record::appendChild( node, "REC_LEN", this->length );
+	STDF_Record::appendChild( node, "HEAD_NUM", this->headNumber );
+	STDF_Record::appendChild( node, "SITE_NUM", this->siteNumber );
+	STDF_Record::appendChild( node, "PART_CNT", this->partCount );
+	STDF_Record::appendChild( node, "RTST_CNT", this->retestCount );
+	STDF_Record::appendChild( node, "ABRT_CNT", this->abortCount );
+	STDF_Record::appendChild( node, "GOOD_CNT", this->goodCount );
+	STDF_Record::appendChild( node, "FUNC_CNT", this->functionalCount );
 
 	return node;
 }
 
 PMR::PMR( int l, char*& d ) :
-		STDF_record( "PMR", l, d ),
+		STDF_Record( "PMR", l, d ),
 		pinIndex( 0 ),
 		channelType( 0 ),
 		headNumber( 0 ),
@@ -547,21 +603,21 @@ pugi::xml_node PMR::appendNode( pugi::xml_node& root )
 {
 	pugi::xml_node node = root.append_child( "PMR" );
 
-	STDF_record::appendChild( node, "name", this->name );
-	STDF_record::appendChild( node, "length", this->length );
-	STDF_record::appendChild( node, "PinIndex", this->pinIndex );
-	STDF_record::appendChild( node, "ChannelType", this->channelType );
-	STDF_record::appendChild( node, "ChannelName", this->channelName );
-	STDF_record::appendChild( node, "PhysicalName", this->physicalName );
-	STDF_record::appendChild( node, "LogicalName", this->logicalName );
-	STDF_record::appendChild( node, "HeadNumber", this->headNumber );
-	STDF_record::appendChild( node, "SiteNumber", this->siteNumber );
+	STDF_Record::appendChild( node, "NAME", this->name );
+	STDF_Record::appendChild( node, "REC_LEN", this->length );
+	STDF_Record::appendChild( node, "PMR_INDX", this->pinIndex );
+	STDF_Record::appendChild( node, "CHAN_TYP", this->channelType );
+	STDF_Record::appendChild( node, "CHAN_NAM", this->channelName );
+	STDF_Record::appendChild( node, "PHY_NAM", this->physicalName );
+	STDF_Record::appendChild( node, "LOG_NAM", this->logicalName );
+	STDF_Record::appendChild( node, "HEAD_NUM", this->headNumber );
+	STDF_Record::appendChild( node, "SITE_NUM", this->siteNumber );
 
 	return node;
 }
 
 HBR::HBR( int l, char*& d ) :
-		STDF_record( "HBR", l, d ),
+		STDF_Record( "HBR", l, d ),
 		headNumber( 0 ),
 		siteNumber( 0 ),
 		hBinNumber( 0 ),
@@ -585,20 +641,20 @@ pugi::xml_node HBR::appendNode( pugi::xml_node& root )
 {
 	pugi::xml_node node = root.append_child( "HBR" );
 
-	STDF_record::appendChild( node, "name", this->name );
-	STDF_record::appendChild( node, "length", this->length );
-	STDF_record::appendChild( node, "HeadNumber", this->headNumber );
-	STDF_record::appendChild( node, "SiteNumber", this->siteNumber );
-	STDF_record::appendChild( node, "HBinNumber", this->hBinNumber );
-	STDF_record::appendChild( node, "HBinCount", this->hBinCount );
-	STDF_record::appendChild( node, "HBinPassFail", this->hBinPassFail );
-	STDF_record::appendChild( node, "HBinName", this->hBinName );
+	STDF_Record::appendChild( node, "NAME", this->name );
+	STDF_Record::appendChild( node, "REC_LEN", this->length );
+	STDF_Record::appendChild( node, "HeadNumber", this->headNumber );
+	STDF_Record::appendChild( node, "SiteNumber", this->siteNumber );
+	STDF_Record::appendChild( node, "HBinNumber", this->hBinNumber );
+	STDF_Record::appendChild( node, "HBinCount", this->hBinCount );
+	STDF_Record::appendChild( node, "HBinPassFail", this->hBinPassFail );
+	STDF_Record::appendChild( node, "HBinName", this->hBinName );
 
 	return node;
 }
 
 SBR::SBR( int l, char*& d ) :
-		STDF_record( "SBR", l, d ),
+		STDF_Record( "SBR", l, d ),
 		headNumber( 0 ),
 		siteNumber( 0 ),
 		sBinNumber( 0 ),
@@ -622,20 +678,20 @@ pugi::xml_node SBR::appendNode( pugi::xml_node& root )
 {
 	pugi::xml_node node = root.append_child( "SBR" );
 
-	STDF_record::appendChild( node, "name", this->name );
-	STDF_record::appendChild( node, "length", this->length );
-	STDF_record::appendChild( node, "HeadNumber", this->headNumber );
-	STDF_record::appendChild( node, "SiteNumber", this->siteNumber );
-	STDF_record::appendChild( node, "SBinNumber", this->sBinNumber );
-	STDF_record::appendChild( node, "SBinCount", this->sBinCount );
-	STDF_record::appendChild( node, "SBinPassFail", this->sBinPassFail );
-	STDF_record::appendChild( node, "SBinName", this->sBinName );
+	STDF_Record::appendChild( node, "NAME", this->name );
+	STDF_Record::appendChild( node, "REC_LEN", this->length );
+	STDF_Record::appendChild( node, "HeadNumber", this->headNumber );
+	STDF_Record::appendChild( node, "SiteNumber", this->siteNumber );
+	STDF_Record::appendChild( node, "SBinNumber", this->sBinNumber );
+	STDF_Record::appendChild( node, "SBinCount", this->sBinCount );
+	STDF_Record::appendChild( node, "SBinPassFail", this->sBinPassFail );
+	STDF_Record::appendChild( node, "SBinName", this->sBinName );
 
 	return node;
 }
 
 PGR::PGR( int l, char*& d ) :
-		STDF_record( "PGR", l, d ),
+		STDF_Record( "PGR", l, d ),
 		groupIndex( 0 ),
 		indexCount( 0 ),
 		pmrIndex( NULL )
@@ -660,18 +716,110 @@ pugi::xml_node PGR::appendNode( pugi::xml_node& root )
 {
 	pugi::xml_node node = root.append_child( "PGR" );
 
-	STDF_record::appendChild( node, "name", this->name );
-	STDF_record::appendChild( node, "length", this->length );
-	STDF_record::appendChild( node, "GroupIndex", this->groupIndex );
-	STDF_record::appendChild( node, "GroupName", this->groupName );
-	STDF_record::appendChild( node, "IndexCount", this->indexCount );
+	STDF_Record::appendChild( node, "NAME", this->name );
+	STDF_Record::appendChild( node, "REC_LEN", this->length );
+	STDF_Record::appendChild( node, "GRP_INDX", this->groupIndex );
+	STDF_Record::appendChild( node, "GRP_NAM", this->groupName );
+	STDF_Record::appendChild( node, "INDX_CNT", this->indexCount );
 
 	if ( pmrIndex )
 	{
-		pugi::xml_node indexNode = node.append_child( "PmrIndexes" );
+		pugi::xml_node indexNode = node.append_child( "PMR_INDX" );
 		for( int i = 0; i < indexCount; i++ )
 		{
-			STDF_record::appendChild( indexNode, "Index", this->pmrIndex[i] );
+			STDF_Record::appendChild( indexNode, "Index", this->pmrIndex[i] );
+		}
+	}
+
+	return node;
+}
+
+PLR::PLR( int l, char*& d ) :
+		STDF_Record( "PLR", l, d ),
+		groupCount( 0 ),
+		groupIndex( NULL ),
+		groupMode( NULL ),
+		groupRadix( NULL ),
+		programChar( NULL ),
+		returnChar( NULL ),
+		programChal( NULL ),
+		returnChal( NULL )
+{
+	decodeData();
+}
+
+PLR::~PLR()
+{
+	DELETE_BPTR( groupIndex );
+	DELETE_BPTR( groupMode );
+	DELETE_BPTR( groupRadix );
+	DELETE_BPTR( programChar );
+	DELETE_BPTR( returnChar );
+	DELETE_BPTR( programChal );
+	DELETE_BPTR( returnChal );
+}
+
+void PLR::decodeData()
+{
+	groupIndex = readKU2( data, groupCount );
+	groupMode = readKU2( data, groupCount );
+	groupRadix = readKU1( data, groupCount );
+	programChar = readKCn( data, groupCount );
+	returnChar = readKCn( data, groupCount );
+	programChal = readKCn( data, groupCount );
+	programChal = readKCn( data, groupCount );
+}
+
+pugi::xml_node PLR::appendNode( pugi::xml_node& root )
+{
+	pugi::xml_node node = root.append_child( "PGR" );
+
+	STDF_Record::appendChild( node, "NAME", this->name );
+	STDF_Record::appendChild( node, "REC_LEN", this->length );
+	STDF_Record::appendChild( node, "GRP_CNT", this->groupCount );
+
+	if ( groupCount )
+	{
+		pugi::xml_node groupIndexNode = node.append_child( "GRP_INDX" );
+		for( int i = 0; i < groupCount; i++ )
+		{
+			STDF_Record::appendChild( groupIndexNode, "Index", this->groupIndex[i] );
+		}
+
+		pugi::xml_node groupModeNode = node.append_child( "GRP_MODE" );
+		for( int i = 0; i < groupCount; i++ )
+		{
+			STDF_Record::appendChild( groupModeNode, "Mode", this->groupMode[i] );
+		}
+
+		pugi::xml_node groupRadixNode = node.append_child( "GRP_RADX" );
+		for( int i = 0; i < groupCount; i++ )
+		{
+			STDF_Record::appendChild( groupRadixNode, "Radix", this->groupRadix[i] );
+		}
+
+		pugi::xml_node programCharNode = node.append_child( "PGM_CHAR" );
+		for( int i = 0; i < groupCount; i++ )
+		{
+			STDF_Record::appendChild( programCharNode, "PChar", this->programChar[i] );
+		}
+
+		pugi::xml_node returnCharNode = node.append_child( "RTN_CHAR" );
+		for( int i = 0; i < groupCount; i++ )
+		{
+			STDF_Record::appendChild( returnCharNode, "RChar", this->returnChar[i] );
+		}
+
+		pugi::xml_node programChalNode = node.append_child( "PGM_CHAL" );
+		for( int i = 0; i < groupCount; i++ )
+		{
+			STDF_Record::appendChild( programChalNode, "PChar", this->programChal[i] );
+		}
+
+		pugi::xml_node returnChalNode = node.append_child( "RTN_CHAL" );
+		for( int i = 0; i < groupCount; i++ )
+		{
+			STDF_Record::appendChild( returnChalNode, "RChar", this->returnChal[i] );
 		}
 	}
 
@@ -679,7 +827,7 @@ pugi::xml_node PGR::appendNode( pugi::xml_node& root )
 }
 
 RDR::RDR( int l, char*& d ) :
-		STDF_record( "RDR", l, d ),
+		STDF_Record( "RDR", l, d ),
 		numBins( 0 ),
 		rtstBin( NULL )
 {
@@ -701,16 +849,16 @@ pugi::xml_node RDR::appendNode( pugi::xml_node& root )
 {
 	pugi::xml_node node = root.append_child( "RDR" );
 
-	STDF_record::appendChild( node, "name", this->name );
-	STDF_record::appendChild( node, "length", this->length );
-	STDF_record::appendChild( node, "NumBins", this->numBins );
-	STDF_record::appendChild( node, "RetestBin", this->rtstBin );
+	STDF_Record::appendChild( node, "NAME", this->name );
+	STDF_Record::appendChild( node, "REC_LEN", this->length );
+	STDF_Record::appendChild( node, "NUM_BINS", this->numBins );
+	STDF_Record::appendChild( node, "RTST_BIN", this->rtstBin );
 
 	return node;
 }
 
 SDR::SDR( int l, char*& d ):
-		STDF_record( "SDR", l, d ),
+		STDF_Record( "SDR", l, d ),
 		headNumber( 0 ),
 		siteGroup( 0 ),
 		siteCount( 0 ),
@@ -752,44 +900,44 @@ pugi::xml_node SDR::appendNode( pugi::xml_node& root )
 {
 	pugi::xml_node node = root.append_child( "SDR" );
 
-	STDF_record::appendChild( node, "name", this->name );
-	STDF_record::appendChild( node, "length", this->length );
-	STDF_record::appendChild( node, "HeadNumber", this->headNumber );
-	STDF_record::appendChild( node, "SiteGroup", this->siteGroup );
-	STDF_record::appendChild( node, "SiteCount", this->siteCount );
+	STDF_Record::appendChild( node, "NAME", this->name );
+	STDF_Record::appendChild( node, "REC_LEN", this->length );
+	STDF_Record::appendChild( node, "HEAD_NUM", this->headNumber );
+	STDF_Record::appendChild( node, "SITE_GRP", this->siteGroup );
+	STDF_Record::appendChild( node, "SITE_CNT", this->siteCount );
 
 	if ( siteCount )
 	{
-		pugi::xml_node indexNode = node.append_child( "SiteNumber" );
+		pugi::xml_node indexNode = node.append_child( "SITE_NUM" );
 		for( int i = 0; i < siteCount; i++ )
 		{
-			STDF_record::appendChild( indexNode, "Number", this->siteNumber[i] );
+			STDF_Record::appendChild( indexNode, "Number", this->siteNumber[i] );
 		}
 	}
 
 
-	STDF_record::appendChild( node, "HandType", this->handType );
-	STDF_record::appendChild( node, "HandId", this->handId );
-	STDF_record::appendChild( node, "CardType", this->cardType );
-	STDF_record::appendChild( node, "CardId", this->cardId );
-	STDF_record::appendChild( node, "LoadType", this->loadType );
-	STDF_record::appendChild( node, "LoadId", this->loadId );
-	STDF_record::appendChild( node, "DibType", this->dibType );
-	STDF_record::appendChild( node, "DibId", this->dibId );
-	STDF_record::appendChild( node, "CableType", this->cableType );
-	STDF_record::appendChild( node, "CableId", this->cableId );
-	STDF_record::appendChild( node, "ContType", this->contType );
-	STDF_record::appendChild( node, "ContId", this->contId );
-	STDF_record::appendChild( node, "LaserType", this->laserType );
-	STDF_record::appendChild( node, "LaserId", this->laserId );
-	STDF_record::appendChild( node, "ExtraType", this->extraType );
-	STDF_record::appendChild( node, "ExtraId", this->extraId );
+	STDF_Record::appendChild( node, "HAND_TYP", this->handType );
+	STDF_Record::appendChild( node, "HAND_ID", this->handId );
+	STDF_Record::appendChild( node, "CARD_TYP", this->cardType );
+	STDF_Record::appendChild( node, "CARD_ID", this->cardId );
+	STDF_Record::appendChild( node, "LOAD_TYP", this->loadType );
+	STDF_Record::appendChild( node, "LOAD_ID", this->loadId );
+	STDF_Record::appendChild( node, "DIB_TYP", this->dibType );
+	STDF_Record::appendChild( node, "DIB_ID", this->dibId );
+	STDF_Record::appendChild( node, "CABL_TYP", this->cableType );
+	STDF_Record::appendChild( node, "CABL_ID", this->cableId );
+	STDF_Record::appendChild( node, "CONT_TYP", this->contType );
+	STDF_Record::appendChild( node, "CONT_ID", this->contId );
+	STDF_Record::appendChild( node, "LASR_TYP", this->laserType );
+	STDF_Record::appendChild( node, "LASR_ID", this->laserId );
+	STDF_Record::appendChild( node, "EXTR_TYP", this->extraType );
+	STDF_Record::appendChild( node, "EXTR_ID", this->extraId );
 
 	return node;
 }
 
 WIR::WIR( int l, char*& d ) :
-		STDF_record( "WIR", l, d ),
+		STDF_Record( "WIR", l, d ),
 		headNumber( 0 ),
 		siteGroup( 0 ),
 		startTime( 0 )
@@ -809,18 +957,18 @@ pugi::xml_node WIR::appendNode( pugi::xml_node& root )
 {
 	pugi::xml_node node = root.append_child( "WIR" );
 
-	STDF_record::appendChild( node, "name", this->name );
-	STDF_record::appendChild( node, "length", this->length );
-	STDF_record::appendChild( node, "HeadNumber", this->headNumber );
-	STDF_record::appendChild( node, "SiteGroup", this->siteGroup );
-	STDF_record::appendChild( node, "StartTime", this->startTime );
-	STDF_record::appendChild( node, "WaferId", this->waferId );
+	STDF_Record::appendChild( node, "NAME", this->name );
+	STDF_Record::appendChild( node, "REC_LEN", this->length );
+	STDF_Record::appendChild( node, "HEAD_NUM", this->headNumber );
+	STDF_Record::appendChild( node, "SITE_GRP", this->siteGroup );
+	STDF_Record::appendChild( node, "START_T", this->startTime );
+	STDF_Record::appendChild( node, "WAFER_ID", this->waferId );
 
 	return node;
 }
 
 WRR::WRR( int l, char*& d) :
-		STDF_record( "WRR", l, d ),
+		STDF_Record( "WRR", l, d ),
 		headNumber( 0 ),
 		siteGroup( 0 ),
 		finishTime( 0 ),
@@ -855,22 +1003,22 @@ pugi::xml_node WRR::appendNode( pugi::xml_node& root )
 {
 	pugi::xml_node node = root.append_child( "WRR" );
 
-	STDF_record::appendChild( node, "name", this->name );
-	STDF_record::appendChild( node, "length", this->length );
-	STDF_record::appendChild( node, "HeadNumber", this->headNumber );
-	STDF_record::appendChild( node, "SiteGroup", this->siteGroup );
-	STDF_record::appendChild( node, "FinishTime", this->finishTime );
-	STDF_record::appendChild( node, "PartCount", this->partCount );
-	STDF_record::appendChild( node, "RetestCount", this->retestCount );
-	STDF_record::appendChild( node, "AbortCount", this->abortCount );
-	STDF_record::appendChild( node, "GoodCount", this->goodCount );
-	STDF_record::appendChild( node, "FuncCount", this->funcCount );
-	STDF_record::appendChild( node, "WaferId", this->waferId );
-	STDF_record::appendChild( node, "FabWaferId", this->fabWaferId );
-	STDF_record::appendChild( node, "FrameId", this->frameId );
-	STDF_record::appendChild( node, "MaskId", this->maskId );
-	STDF_record::appendChild( node, "UserDescription", this->userDescription );
-	STDF_record::appendChild( node, "ExecDescription", this->execDescription );
+	STDF_Record::appendChild( node, "NAME", this->name );
+	STDF_Record::appendChild( node, "REC_LEN", this->length );
+	STDF_Record::appendChild( node, "HEAD_NUM", this->headNumber );
+	STDF_Record::appendChild( node, "SITE_GRP", this->siteGroup );
+	STDF_Record::appendChild( node, "FINISH_T", this->finishTime );
+	STDF_Record::appendChild( node, "PART_CNT", this->partCount );
+	STDF_Record::appendChild( node, "RTST_CNT", this->retestCount );
+	STDF_Record::appendChild( node, "ABRT_CNT", this->abortCount );
+	STDF_Record::appendChild( node, "GOOD_CNT", this->goodCount );
+	STDF_Record::appendChild( node, "FUNC_CNT", this->funcCount );
+	STDF_Record::appendChild( node, "WAFER_ID", this->waferId );
+	STDF_Record::appendChild( node, "FABWF_ID", this->fabWaferId );
+	STDF_Record::appendChild( node, "FRAME_ID", this->frameId );
+	STDF_Record::appendChild( node, "MASK_ID", this->maskId );
+	STDF_Record::appendChild( node, "USR_DESC", this->userDescription );
+	STDF_Record::appendChild( node, "EXC_DESC", this->execDescription );
 
 
 
@@ -878,7 +1026,7 @@ pugi::xml_node WRR::appendNode( pugi::xml_node& root )
 }
 
 WCR::WCR( int l, char*& d) :
-		STDF_record( "WCR", l, d ),
+		STDF_Record( "WCR", l, d ),
 		waferSize( 0 ),
 		dieHeight( 0 ),
 		dieWidth( 0 ),
@@ -909,23 +1057,23 @@ pugi::xml_node WCR::appendNode( pugi::xml_node& root )
 {
 	pugi::xml_node node = root.append_child( "WCR" );
 
-	STDF_record::appendChild( node, "name", this->name );
-	STDF_record::appendChild( node, "length", this->length );
-	STDF_record::appendChild( node, "WaferSize", this->waferSize );
-	STDF_record::appendChild( node, "DieHeight", this->dieHeight );
-	STDF_record::appendChild( node, "DieWidth", this->dieWidth );
-	STDF_record::appendChild( node, "WaferUnits", this->waferUnits );
-	STDF_record::appendChild( node, "WaferFlat", this->waferFlat );
-	STDF_record::appendChild( node, "CenterX", this->centerX );
-	STDF_record::appendChild( node, "CenterY", this->centerY );
-	STDF_record::appendChild( node, "PosX", this->posX );
-	STDF_record::appendChild( node, "PosY", this->posY );
+	STDF_Record::appendChild( node, "NAME", this->name );
+	STDF_Record::appendChild( node, "REC_LEN", this->length );
+	STDF_Record::appendChild( node, "WAFR_SIZ", this->waferSize );
+	STDF_Record::appendChild( node, "DIE_HT", this->dieHeight );
+	STDF_Record::appendChild( node, "DIE_WID", this->dieWidth );
+	STDF_Record::appendChild( node, "WF_UNITS", this->waferUnits );
+	STDF_Record::appendChild( node, "WF_FLAT", this->waferFlat );
+	STDF_Record::appendChild( node, "CENTER_X", this->centerX );
+	STDF_Record::appendChild( node, "CENTER_Y", this->centerY );
+	STDF_Record::appendChild( node, "POS_X", this->posX );
+	STDF_Record::appendChild( node, "POS_Y", this->posY );
 
 	return node;
 }
 
 PIR::PIR( int l, char*& d ) :
-		STDF_record( "PIR", l, d ),
+		STDF_Record( "PIR", l, d ),
 		headNumber( 0 ),
 		siteNumber( 0 )
 {
@@ -942,16 +1090,16 @@ pugi::xml_node PIR::appendNode( pugi::xml_node& root )
 {
 	pugi::xml_node node = root.append_child( "PIR" );
 
-	STDF_record::appendChild( node, "name", this->name );
-	STDF_record::appendChild( node, "length", this->length );
-	STDF_record::appendChild( node, "HeadNumber", this->headNumber );
-	STDF_record::appendChild( node, "SiteNumber", this->siteNumber );
+	STDF_Record::appendChild( node, "NAME", this->name );
+	STDF_Record::appendChild( node, "REC_LEN", this->length );
+	STDF_Record::appendChild( node, "HEAD_NUM", this->headNumber );
+	STDF_Record::appendChild( node, "SITE_NUM", this->siteNumber );
 
 	return node;
 }
 
 PRR::PRR( int l, char*& d ) :
-		STDF_record( "PRR", l, d ),
+		STDF_Record( "PRR", l, d ),
 		headNumber( 0 ),
 		siteNumber( 0 ),
 		partFlag( 0 ),
@@ -991,26 +1139,26 @@ pugi::xml_node PRR::appendNode( pugi::xml_node& root )
 {
 	pugi::xml_node node = root.append_child( "PRR" );
 
-	STDF_record::appendChild( node, "name", this->name );
-	STDF_record::appendChild( node, "length", this->length );
-	STDF_record::appendChild( node, "HeadNumber", this->headNumber );
-	STDF_record::appendChild( node, "SiteNumber", this->siteNumber );
-	STDF_record::appendChild( node, "PartFlag", this->partFlag );
-	STDF_record::appendChild( node, "NumTest", this->numTest );
-	STDF_record::appendChild( node, "HardBin", this->hardBin );
-	STDF_record::appendChild( node, "SoftBin", this->softBin );
-	STDF_record::appendChild( node, "XCoord", this->xCoord );
-	STDF_record::appendChild( node, "YCoord", this->yCoord );
-	STDF_record::appendChild( node, "TestTime", this->testTime );
-	STDF_record::appendChild( node, "PartId", this->partId );
-	STDF_record::appendChild( node, "PartText", this->partText );
+	STDF_Record::appendChild( node, "NAME", this->name );
+	STDF_Record::appendChild( node, "REC_LEN", this->length );
+	STDF_Record::appendChild( node, "HEAD_NUM", this->headNumber );
+	STDF_Record::appendChild( node, "SITE_NUM", this->siteNumber );
+	STDF_Record::appendChild( node, "PART_FLG", this->partFlag );
+	STDF_Record::appendChild( node, "NUM_TEST", this->numTest );
+	STDF_Record::appendChild( node, "HARD_BIN", this->hardBin );
+	STDF_Record::appendChild( node, "SOFT_BIN", this->softBin );
+	STDF_Record::appendChild( node, "X_COORD", this->xCoord );
+	STDF_Record::appendChild( node, "Y_COORD", this->yCoord );
+	STDF_Record::appendChild( node, "TEST_T", this->testTime );
+	STDF_Record::appendChild( node, "PART_ID", this->partId );
+	STDF_Record::appendChild( node, "PART_TXT", this->partText );
 
 	if ( partFix )
 	{
-		pugi::xml_node indexNode = node.append_child( "PartFix" );
+		pugi::xml_node indexNode = node.append_child( "PART_FIX" );
 		while( ++partFix )
 		{
-			STDF_record::appendChild( indexNode, "Fix", this->partFix );
+			STDF_Record::appendChild( indexNode, "Fix", this->partFix );
 		}
 	}
 
@@ -1018,7 +1166,7 @@ pugi::xml_node PRR::appendNode( pugi::xml_node& root )
 }
 
 TSR::TSR( int l, char*& d ):
-		STDF_record( "TSR", l, d),
+		STDF_Record( "TSR", l, d),
 		headNumber( 0 ),
 		siteNumber( 0 ),
 		testType( 0 ),
@@ -1060,29 +1208,30 @@ pugi::xml_node TSR::appendNode( pugi::xml_node& root )
 {
 	pugi::xml_node node = root.append_child( "TSR" );
 
-	STDF_record::appendChild( node, "name", this->name );
-	STDF_record::appendChild( node, "length", this->length );
-	STDF_record::appendChild( node, "HeadNumber", this->headNumber );
-	STDF_record::appendChild( node, "SiteNumber", this->siteNumber );
-	STDF_record::appendChild( node, "TestType", this->testType );
-	STDF_record::appendChild( node, "TestNumber", this->testNumber );
-	STDF_record::appendChild( node, "ExecCount", this->execCount );
-	STDF_record::appendChild( node, "FailCount", this->failCount );
-	STDF_record::appendChild( node, "AlarmCount", this->alarmCount );
-	STDF_record::appendChild( node, "SeqName", this->seqName );
-	STDF_record::appendChild( node, "TestLabel", this->testLabel );
-	STDF_record::appendChild( node, "OptFlag", this->optFlag );
-	STDF_record::appendChild( node, "TestTime", this->testTime );
-	STDF_record::appendChild( node, "TestMin", this->testMin );
-	STDF_record::appendChild( node, "TestMax", this->testMax );
-	STDF_record::appendChild( node, "TestSums", this->testSums );
-	STDF_record::appendChild( node, "TestSquares", this->testSquares );
+	STDF_Record::appendChild( node, "NAME", this->name );
+	STDF_Record::appendChild( node, "REC_LEN", this->length );
+	STDF_Record::appendChild( node, "HEAD_NUM", this->headNumber );
+	STDF_Record::appendChild( node, "SITE_NUM", this->siteNumber );
+	STDF_Record::appendChild( node, "TEST_TYP", this->testType );
+	STDF_Record::appendChild( node, "TEST_NUM", this->testNumber );
+	STDF_Record::appendChild( node, "EXEC_CNT", this->execCount );
+	STDF_Record::appendChild( node, "FAIL_CNT", this->failCount );
+	STDF_Record::appendChild( node, "ALRM_CNT", this->alarmCount );
+	STDF_Record::appendChild( node, "TEST_NAM", this->testName );
+	STDF_Record::appendChild( node, "SEQ_NAME", this->seqName );
+	STDF_Record::appendChild( node, "TEST_LBL", this->testLabel );
+	STDF_Record::appendChild( node, "OPT_FLAG", this->optFlag );
+	STDF_Record::appendChild( node, "TEST_TIM", this->testTime );
+	STDF_Record::appendChild( node, "TEST_MIN", this->testMin );
+	STDF_Record::appendChild( node, "TEST_MAX", this->testMax );
+	STDF_Record::appendChild( node, "TST_SUMS", this->testSums );
+	STDF_Record::appendChild( node, "TST_SQRS", this->testSquares );
 
 	return node;
 }
 
 PTR::PTR( int l, char*& d ) :
-		STDF_record( "PTR", l, d ),
+		STDF_Record( "PTR", l, d ),
 		testNumber( 0 ),
 		headNumber( 0 ),
 		siteNumber( 0 ),
@@ -1129,34 +1278,34 @@ pugi::xml_node PTR::appendNode( pugi::xml_node& root )
 {
 	pugi::xml_node node = root.append_child( "PTR" );
 
-	STDF_record::appendChild( node, "name", this->name );
-	STDF_record::appendChild( node, "length", this->length );
-	STDF_record::appendChild( node, "TestNumber", this->testNumber );
-	STDF_record::appendChild( node, "HeadNumber", this->headNumber );
-	STDF_record::appendChild( node, "SiteNumber", this->siteNumber );
-	STDF_record::appendChild( node, "TestFlag", this->testFlag );
-	STDF_record::appendChild( node, "ParmFlag", this->parmFlag );
-	STDF_record::appendChild( node, "Result", this->result );
-	STDF_record::appendChild( node, "TestTxt", this->testTxt );
-	STDF_record::appendChild( node, "AlarmId", this->alarmId );
-	STDF_record::appendChild( node, "OptFlag", this->optFlag );
-	STDF_record::appendChild( node, "ResScal", this->resScal );
-	STDF_record::appendChild( node, "LlmScal", this->llmScal );
-	STDF_record::appendChild( node, "HlmScal", this->hlmScal );
-	STDF_record::appendChild( node, "loLimit", this->loLimit );
-	STDF_record::appendChild( node, "hiLimit", this->hiLimit );
-	STDF_record::appendChild( node, "units", this->units );
-	STDF_record::appendChild( node, "cResFmt", this->cResFmt );
-	STDF_record::appendChild( node, "cLlmFmt", this->cLlmFmt );
-	STDF_record::appendChild( node, "cHlmFmt", this->cHlmFmt );
-	STDF_record::appendChild( node, "loSpec", this->loSpec );
-	STDF_record::appendChild( node, "hiSpec", this->hiSpec );
+	STDF_Record::appendChild( node, "NAME", this->name );
+	STDF_Record::appendChild( node, "REC_LEN", this->length );
+	STDF_Record::appendChild( node, "TEST_NUM", this->testNumber );
+	STDF_Record::appendChild( node, "HEAD_NUM", this->headNumber );
+	STDF_Record::appendChild( node, "SITE_NUM", this->siteNumber );
+	STDF_Record::appendChild( node, "TEST_FLG", this->testFlag );
+	STDF_Record::appendChild( node, "PARM_FLG", this->parmFlag );
+	STDF_Record::appendChild( node, "RESULT", this->result );
+	STDF_Record::appendChild( node, "TEST_TXT", this->testTxt );
+	STDF_Record::appendChild( node, "ALARM_ID", this->alarmId );
+	STDF_Record::appendChild( node, "OPT_FLAG", this->optFlag );
+	STDF_Record::appendChild( node, "RES_SCAL", static_cast<uint16_t>( this->resScal ) );
+	STDF_Record::appendChild( node, "LLM_SCAL", static_cast<uint16_t>( this->llmScal ) );
+	STDF_Record::appendChild( node, "HLM_SCAL", static_cast<uint16_t>( this->hlmScal ) );
+	STDF_Record::appendChild( node, "LO_LIMIT", this->loLimit );
+	STDF_Record::appendChild( node, "HI_LIMIT", this->hiLimit );
+	STDF_Record::appendChild( node, "UNITS", this->units );
+	STDF_Record::appendChild( node, "C_RESFMT", this->cResFmt );
+	STDF_Record::appendChild( node, "C_LLMFMT", this->cLlmFmt );
+	STDF_Record::appendChild( node, "C_HLMFMT", this->cHlmFmt );
+	STDF_Record::appendChild( node, "LO_SPEC", this->loSpec );
+	STDF_Record::appendChild( node, "HI_SPEC", this->hiSpec );
 
 	return node;
 }
 
 MPR::MPR( int l, char*& d ) :
-		STDF_record( "MPR", l, d ),
+		STDF_Record( "MPR", l, d ),
 		testNumber( 0 ),
 		headNumber( 0 ),
 		siteNumber( 0 ),
@@ -1223,67 +1372,67 @@ pugi::xml_node MPR::appendNode( pugi::xml_node& root )
 {
 	pugi::xml_node node = root.append_child( "MPR" );
 
-	STDF_record::appendChild( node, "name", this->name );
-	STDF_record::appendChild( node, "length", this->length );
-	STDF_record::appendChild( node, "TestNumber", this->testNumber );
-	STDF_record::appendChild( node, "HeadNumber", this->headNumber );
-	STDF_record::appendChild( node, "SiteNumber", this->siteNumber );
-	STDF_record::appendChild( node, "TestFlag", this->testFlag );
-	STDF_record::appendChild( node, "ParmFlag", this->parmFlag );
-	STDF_record::appendChild( node, "ReturnIndexCount", this->returnIndexCount );
-	STDF_record::appendChild( node, "ResultCount", this->resultCount );
+	STDF_Record::appendChild( node, "NAME", this->name );
+	STDF_Record::appendChild( node, "REC_LEN", this->length );
+	STDF_Record::appendChild( node, "TEST_NUM", this->testNumber );
+	STDF_Record::appendChild( node, "HEAD_NUM", this->headNumber );
+	STDF_Record::appendChild( node, "SITE_NUM", this->siteNumber );
+	STDF_Record::appendChild( node, "TEST_FLG", this->testFlag );
+	STDF_Record::appendChild( node, "PARM_FLG", this->parmFlag );
+	STDF_Record::appendChild( node, "RTN_ICNT", this->returnIndexCount );
+	STDF_Record::appendChild( node, "RSLT_CNT", this->resultCount );
 
 	if ( returnIndexCount )
 	{
-		pugi::xml_node indexNode = node.append_child( "ReturnState" );
+		pugi::xml_node indexNode = node.append_child( "RTN_STAT" );
 		for( int i = 0; i < returnIndexCount; i++ )
 		{
-			STDF_record::appendChild( indexNode, "State", this->returnState[i] );
+			STDF_Record::appendChild( indexNode, "State", this->returnState[i] );
 		}
 	}
 
 	if ( resultCount )
 	{
-		pugi::xml_node indexNode = node.append_child( "ResultCount" );
+		pugi::xml_node indexNode = node.append_child( "RTN_RSLT" );
 		for( int i = 0; i < returnIndexCount; i++ )
 		{
-			STDF_record::appendChild( indexNode, "Count", this->returnResult[i] );
+			STDF_Record::appendChild( indexNode, "Count", this->returnResult[i] );
 		}
 	}
 
-	STDF_record::appendChild( node, "TestText", this->testText );
-	STDF_record::appendChild( node, "AlarmId", this->alarmId );
-	STDF_record::appendChild( node, "OptFlag", this->optFlag );
-	STDF_record::appendChild( node, "ResScal", this->resScal );
-	STDF_record::appendChild( node, "LlmScal", this->llmScal );
-	STDF_record::appendChild( node, "HlmScal", this->hlmScal );
-	STDF_record::appendChild( node, "loLimit", this->loLimit );
-	STDF_record::appendChild( node, "hiLimit", this->hiLimit );
-	STDF_record::appendChild( node, "startInput", this->hiLimit );
-	STDF_record::appendChild( node, "incrementInput", this->hiLimit );
+	STDF_Record::appendChild( node, "TEST_TXT", this->testText );
+	STDF_Record::appendChild( node, "ALARM_ID", this->alarmId );
+	STDF_Record::appendChild( node, "OPT_FLAG", this->optFlag );
+	STDF_Record::appendChild( node, "RES_SCAL", static_cast<uint16_t>( this->resScal ) );
+	STDF_Record::appendChild( node, "LLM_SCAL", static_cast<uint16_t>( this->llmScal ) );
+	STDF_Record::appendChild( node, "HLM_SCAL", static_cast<uint16_t>( this->hlmScal ) );
+	STDF_Record::appendChild( node, "LO_LIMIT", this->loLimit );
+	STDF_Record::appendChild( node, "HI_LIMIT", this->hiLimit );
+	STDF_Record::appendChild( node, "START_IN", this->hiLimit );
+	STDF_Record::appendChild( node, "INCR_IN", this->hiLimit );
 
 	if ( returnIndexCount )
 	{
-		pugi::xml_node indexNode = node.append_child( "ReturnIndex" );
+		pugi::xml_node indexNode = node.append_child( "RTN_INDX" );
 		for( int i = 0; i < returnIndexCount; i++ )
 		{
-			STDF_record::appendChild( indexNode, "Index", this->returnIndex[i] );
+			STDF_Record::appendChild( indexNode, "Index", this->returnIndex[i] );
 		}
 	}
 
-	STDF_record::appendChild( node, "units", this->units );
-	STDF_record::appendChild( node, "unitsInput", this->unitsInput );
-	STDF_record::appendChild( node, "cResFmt", this->cResFmt );
-	STDF_record::appendChild( node, "cLlmFmt", this->cLlmFmt );
-	STDF_record::appendChild( node, "cHlmFmt", this->cHlmFmt );
-	STDF_record::appendChild( node, "loSpec", this->loSpec );
-	STDF_record::appendChild( node, "hiSpec", this->hiSpec );
+	STDF_Record::appendChild( node, "UNITS", this->units );
+	STDF_Record::appendChild( node, "UNITS_IN", this->unitsInput );
+	STDF_Record::appendChild( node, "C_RESFMT", this->cResFmt );
+	STDF_Record::appendChild( node, "C_LLMFMT", this->cLlmFmt );
+	STDF_Record::appendChild( node, "C_HLMFMT", this->cHlmFmt );
+	STDF_Record::appendChild( node, "LO_SPEC", this->loSpec );
+	STDF_Record::appendChild( node, "HI_SPEC", this->hiSpec );
 
 	return node;
 }
 
 FTR::FTR( int l, char*& d ) :
-		STDF_record( "FTR", l, d ),
+		STDF_Record( "FTR", l, d ),
 		testNumber( 0 ),
 		headNumber( 0 ),
 		siteNumber( 0 ),
@@ -1355,67 +1504,67 @@ pugi::xml_node FTR::appendNode( pugi::xml_node& root )
 {
 	pugi::xml_node node = root.append_child( "FTR" );
 
-	STDF_record::appendChild( node, "name", this->name );
-	STDF_record::appendChild( node, "length", this->length );
-	STDF_record::appendChild( node, "TestNumber", this->testNumber );
-	STDF_record::appendChild( node, "HeadNumber", this->headNumber );
-	STDF_record::appendChild( node, "SiteNumber", this->siteNumber );
-	STDF_record::appendChild( node, "TestFlag", this->testFlag );
-	STDF_record::appendChild( node, "OptFlag", this->optFlag );
-	STDF_record::appendChild( node, "CycleCount", this->cycleCount );
-	STDF_record::appendChild( node, "RelativeVectorAddress", this->relativeVectorAddress );
-	STDF_record::appendChild( node, "RepeatCount", this->repeatCount );
-	STDF_record::appendChild( node, "NumFail", this->numFail );
-	STDF_record::appendChild( node, "XFailAddress", this->xFailAddress );
-	STDF_record::appendChild( node, "YFailAddress", this->yFailAddress );
-	STDF_record::appendChild( node, "VectorOffset", this->vectorOffset );
-	STDF_record::appendChild( node, "ReturnIndexCount", this->returnIndexCount );
-	STDF_record::appendChild( node, "ProgIndexCount", this->progIndexCount );
+	STDF_Record::appendChild( node, "NAME", this->name );
+	STDF_Record::appendChild( node, "REC_LEN", this->length );
+	STDF_Record::appendChild( node, "TEST_NUM", this->testNumber );
+	STDF_Record::appendChild( node, "HEAD_NUM", this->headNumber );
+	STDF_Record::appendChild( node, "SITE_NUM", this->siteNumber );
+	STDF_Record::appendChild( node, "TEST_FLG", this->testFlag );
+	STDF_Record::appendChild( node, "OPT_FLAG", this->optFlag );
+	STDF_Record::appendChild( node, "CYCL_CNT", this->cycleCount );
+	STDF_Record::appendChild( node, "REL_VADR", this->relativeVectorAddress );
+	STDF_Record::appendChild( node, "REPT_CNT", this->repeatCount );
+	STDF_Record::appendChild( node, "NUM_FAIL", this->numFail );
+	STDF_Record::appendChild( node, "XFAIL_AD", this->xFailAddress );
+	STDF_Record::appendChild( node, "YFAIL_AD", this->yFailAddress );
+	STDF_Record::appendChild( node, "VECT_OFF", this->vectorOffset );
+	STDF_Record::appendChild( node, "RTN_ICNT", this->returnIndexCount );
+	STDF_Record::appendChild( node, "PGM_ICNT", this->progIndexCount );
 
 	if ( returnIndexCount )
 	{
-		pugi::xml_node indexNode = node.append_child( "Return" );
+		pugi::xml_node indexNode = node.append_child( "RTN" );
 		for( int i = 0; i < returnIndexCount; i++ )
 		{
-			STDF_record::appendChild( indexNode, "Index", this->returnIndex[i] );
-			STDF_record::appendChild( indexNode, "State", static_cast<uint16_t>( this->returnState[i] ) );
+			STDF_Record::appendChild( indexNode, "Index", this->returnIndex[i] );
+			STDF_Record::appendChild( indexNode, "State", this->returnState[i] );
 		}
 	}
 
 	if ( progIndexCount )
 	{
-		pugi::xml_node indexNode = node.append_child( "ProgIndexes" );
+		pugi::xml_node indexNode = node.append_child( "PGM" );
 		for( int i = 0; i < progIndexCount; i++ )
 		{
-			STDF_record::appendChild( indexNode, "Index", this->progIndex[i] );
-			STDF_record::appendChild( indexNode, "State", static_cast<uint16_t>( this->progState[i] ) );
+			STDF_Record::appendChild( indexNode, "Index", this->progIndex[i] );
+			STDF_Record::appendChild( indexNode, "State", this->progState[i] );
 		}
 	}
 
 	if ( failPin )
 	{
-		pugi::xml_node indexNode = node.append_child( "FailPin" );
+		pugi::xml_node indexNode = node.append_child( "FAIL_PIN" );
 		while( ++failPin )
 		{
-			STDF_record::appendChild( indexNode, "Pin", this->failPin );
+			STDF_Record::appendChild( indexNode, "Pin", this->failPin );
 		}
 	}
 
-	STDF_record::appendChild( node, "VectorName", this->vectorName );
-	STDF_record::appendChild( node, "TimeSet", this->timeSet );
-	STDF_record::appendChild( node, "OpCode", this->opCode );
-	STDF_record::appendChild( node, "TestTxt", this->testTxt );
-	STDF_record::appendChild( node, "AlarmId", this->alarmId );
-	STDF_record::appendChild( node, "ProgTxt", this->progTxt );
-	STDF_record::appendChild( node, "ResultTxt", this->resultTxt );
-	STDF_record::appendChild( node, "PatternGenNumber", this->patternGenNumber );
+	STDF_Record::appendChild( node, "VECT_NAM", this->vectorName );
+	STDF_Record::appendChild( node, "TIME_SET", this->timeSet );
+	STDF_Record::appendChild( node, "OP_CODE", this->opCode );
+	STDF_Record::appendChild( node, "TEST_TXT", this->testTxt );
+	STDF_Record::appendChild( node, "ALARM_ID", this->alarmId );
+	STDF_Record::appendChild( node, "PROG_TXT", this->progTxt );
+	STDF_Record::appendChild( node, "RSLT_TXT", this->resultTxt );
+	STDF_Record::appendChild( node, "PATG_NUM", this->patternGenNumber );
 
 	if ( spinMap )
 	{
-		pugi::xml_node indexNode = node.append_child( "SpinMap" );
+		pugi::xml_node indexNode = node.append_child( "SPIN_MAP" );
 		while( ++spinMap )
 		{
-			STDF_record::appendChild( indexNode, "Spin", this->spinMap );
+			STDF_Record::appendChild( indexNode, "Spin", this->spinMap );
 		}
 	}
 
@@ -1423,7 +1572,7 @@ pugi::xml_node FTR::appendNode( pugi::xml_node& root )
 }
 
 BPS::BPS( int l, char*& d) :
-		STDF_record( "BPS", l, d )
+		STDF_Record( "BPS", l, d )
 {
 	decodeData();
 }
@@ -1437,15 +1586,15 @@ pugi::xml_node BPS::appendNode( pugi::xml_node& root )
 {
 	pugi::xml_node node = root.append_child( "BPS" );
 
-	STDF_record::appendChild( node, "name", this->name );
-	STDF_record::appendChild( node, "length", this->length );
-	STDF_record::appendChild( node, "SeqName", this->seqName );
+	STDF_Record::appendChild( node, "NAME", this->name );
+	STDF_Record::appendChild( node, "REC_LEN", this->length );
+	STDF_Record::appendChild( node, "SEQ_NAME", this->seqName );
 
 	return node;
 }
 
 EPS::EPS( int l, char*& d) :
-		STDF_record( "EPS", l, d )
+		STDF_Record( "EPS", l, d )
 {
 	decodeData();
 }
@@ -1459,14 +1608,14 @@ pugi::xml_node EPS::appendNode( pugi::xml_node& root )
 {
 	pugi::xml_node node = root.append_child( "EPS" );
 
-	STDF_record::appendChild( node, "name", this->name );
-	STDF_record::appendChild( node, "length", this->length );
+	STDF_Record::appendChild( node, "NAME", this->name );
+	STDF_Record::appendChild( node, "REC_LEN", this->length );
 
 	return node;
 }
 
 DTR::DTR( int l, char*& d) :
-		STDF_record( "DTR", l, d )
+		STDF_Record( "DTR", l, d )
 {
 	decodeData();
 }
@@ -1480,9 +1629,9 @@ pugi::xml_node DTR::appendNode( pugi::xml_node& root )
 {
 	pugi::xml_node node = root.append_child( "DTR" );
 
-	STDF_record::appendChild( node, "name", this->name );
-	STDF_record::appendChild( node, "length", this->length );
-	STDF_record::appendChild( node, "TextData", this->textData );
+	STDF_Record::appendChild( node, "NAME", this->name );
+	STDF_Record::appendChild( node, "REC_LEN", this->length );
+	STDF_Record::appendChild( node, "TEXT_DAT", this->textData );
 
 	return node;
 }

@@ -1,12 +1,11 @@
 CC=g++
-CFLAGS=-c -Wall
+CFLAGS=-c -Wall -O3
 LDFLAGS=
 
 VPATH=src:src/xml
 OBJDIR=output
 
 SRC=record.cpp utils.cpp main.cpp pugixml.cpp
-#SRC=$(wildcard **/*.cpp)
 OBJ=$(SRC:%.cpp=$(OBJDIR)/%.o)
 BIN=stdf2xml
 

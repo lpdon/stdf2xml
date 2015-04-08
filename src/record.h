@@ -1,3 +1,25 @@
+/*The MIT License (MIT)
+
+Copyright (c) 2015 lpdon
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.*/
+
 #ifndef RECORD_H_
 #define RECORD_H_
 
@@ -12,7 +34,7 @@
 using namespace std;
 
 /*Class that represents a generic record*/
-class STDF_record
+class STDF_Record
 {
 	protected:
 		const string name;
@@ -21,7 +43,7 @@ class STDF_record
 
 		uint16_t bytesLeft;
 
-		STDF_record( string name, uint16_t length, char*& data );
+		STDF_Record( string name, uint16_t length, char*& data );
 		virtual void decodeData() = 0;
 
 	public:
@@ -36,7 +58,7 @@ class STDF_record
 		static void appendChild( pugi::xml_node& node,
 				const string& variableName, T variable );
 
-		static STDF_record* getRecordInstance( char* bufferPtr );
+		static STDF_Record* getRecordInstance( char* bufferPtr );
 
 		const uint8_t readU1( char*& bufferPtr );
 		const uint8_t* readKU1( char*& bufferPtr, uint16_t k );
@@ -48,6 +70,7 @@ class STDF_record
 		const int32_t readI4( char*& bufferPtr );
 		const char readC1( char*& bufferPtr );
 		const string readCn( char*& bufferPtr );
+		const string* readKCn( char*& bufferPtr, uint16_t k );
 		const uint8_t readB1( char*& bufferPtr );
 		const uint8_t* readBn( char*& bufferPtr );
 		const float readR4( char*& bufferPtr );
@@ -55,14 +78,14 @@ class STDF_record
 		const uint8_t* readKN1( char*& bufferPtr, uint16_t k );
 		const uint8_t* readDn( char*& bufferPtr );
 
-		virtual ~STDF_record()
+		virtual ~STDF_Record()
 		{
 		}
 		;
 };
 
 template<typename T>
-void STDF_record::appendChild( pugi::xml_node& node, const string& variableName,
+void STDF_Record::appendChild( pugi::xml_node& node, const string& variableName,
 		T variable )
 {
 	pugi::xml_node childNode = node.append_child( variableName.c_str() );
@@ -71,7 +94,7 @@ void STDF_record::appendChild( pugi::xml_node& node, const string& variableName,
 }
 
 /*File Attributes Record*/
-class FAR: public STDF_record
+class FAR: public STDF_Record
 {
 	private:
 		uint8_t cpuType;
@@ -85,7 +108,7 @@ class FAR: public STDF_record
 };
 
 /*Audit Trail Record*/
-class ATR: public STDF_record
+class ATR: public STDF_Record
 {
 	private:
 		uint32_t modTime;
@@ -100,7 +123,7 @@ class ATR: public STDF_record
 };
 
 /*Master Information Record*/
-class MIR: public STDF_record
+class MIR: public STDF_Record
 {
 	private:
 		uint32_t setupTime;
@@ -150,7 +173,7 @@ class MIR: public STDF_record
 };
 
 /*Master Results Record*/
-class MRR : public STDF_record
+class MRR : public STDF_Record
 {
 	private:
 		uint32_t finishTime;
@@ -166,7 +189,7 @@ class MRR : public STDF_record
 };
 
 /*Part Count Record*/
-class PCR: public STDF_record
+class PCR: public STDF_Record
 {
 	private:
 		uint8_t headNumber;
@@ -185,7 +208,7 @@ class PCR: public STDF_record
 };
 
 /*Pin Map Record*/
-class PMR : public STDF_record
+class PMR : public STDF_Record
 {
 	private:
 		uint16_t pinIndex;
@@ -204,7 +227,7 @@ class PMR : public STDF_record
 };
 
 /*Hardware Bin Record*/
-class HBR : public STDF_record
+class HBR : public STDF_Record
 {
 	private:
 		uint8_t headNumber;
@@ -222,7 +245,7 @@ class HBR : public STDF_record
 };
 
 /*Software Bin Record*/
-class SBR : public STDF_record
+class SBR : public STDF_Record
 {
 	private:
 		uint8_t headNumber;
@@ -240,7 +263,7 @@ class SBR : public STDF_record
 };
 
 /*Pin Group Record*/
-class PGR : public STDF_record
+class PGR : public STDF_Record
 {
 	private:
 		uint16_t groupIndex;
@@ -257,8 +280,30 @@ class PGR : public STDF_record
 		virtual ~PGR();
 };
 
+/*Pin List Record*/
+class PLR : public STDF_Record
+{
+private:
+	uint16_t groupCount;
+	const uint16_t* groupIndex;
+	const uint16_t* groupMode;
+	const uint8_t* groupRadix;
+	const string* programChar;
+	const string* returnChar;
+	const string* programChal;
+	const string* returnChal;
+
+	virtual void decodeData();
+
+public:
+	PLR( int l, char*& d );
+	virtual pugi::xml_node appendNode( pugi::xml_node& root );
+
+	virtual ~PLR();
+};
+
 /*Retest Data Record*/
-class RDR : public STDF_record
+class RDR : public STDF_Record
 {
 	private:
 		uint16_t numBins;
@@ -274,7 +319,7 @@ class RDR : public STDF_record
 };
 
 /*Site Description Record*/
-class SDR : public STDF_record
+class SDR : public STDF_Record
 {
 	private:
 		uint8_t headNumber;
@@ -308,7 +353,7 @@ class SDR : public STDF_record
 };
 
 /*Wafer Information Record*/
-class WIR : public STDF_record
+class WIR : public STDF_Record
 {
 	private:
 		uint8_t headNumber;
@@ -324,7 +369,7 @@ class WIR : public STDF_record
 };
 
 /*Wafer Results Record*/
-class WRR : public STDF_record
+class WRR : public STDF_Record
 {
 	private:
 		uint8_t headNumber;
@@ -351,7 +396,7 @@ class WRR : public STDF_record
 };
 
 /*Wafer Configuration Record*/
-class WCR : public STDF_record
+class WCR : public STDF_Record
 {
 	private:
 		float waferSize;
@@ -373,7 +418,7 @@ class WCR : public STDF_record
 };
 
 /*Part Information Record*/
-class PIR : public STDF_record
+class PIR : public STDF_Record
 {
 	private:
 		uint8_t headNumber;
@@ -387,7 +432,7 @@ class PIR : public STDF_record
 };
 
 /*Part Results Record*/
-class PRR : public STDF_record
+class PRR : public STDF_Record
 {
 	private:
 		uint8_t headNumber;
@@ -413,7 +458,7 @@ class PRR : public STDF_record
 };
 
 /*Test Synopsis Record*/
-class TSR : public STDF_record
+class TSR : public STDF_Record
 {
 	private:
 		uint8_t headNumber;
@@ -441,7 +486,7 @@ class TSR : public STDF_record
 };
 
 /*Parametric Test Record*/
-class PTR : public STDF_record
+class PTR : public STDF_Record
 {
 	private:
 		uint32_t testNumber;
@@ -473,7 +518,7 @@ class PTR : public STDF_record
 };
 
 /*Multiple-Result Parametric Record*/
-class MPR : public STDF_record
+class MPR : public STDF_Record
 {
 	private:
 		uint32_t testNumber;
@@ -514,7 +559,7 @@ class MPR : public STDF_record
 };
 
 /*Functional Test Record*/
-class FTR : public STDF_record
+class FTR : public STDF_Record
 {
 	private:
 		uint32_t testNumber;
@@ -556,7 +601,7 @@ class FTR : public STDF_record
 };
 
 /*Begin Program Section Record*/
-class BPS : public STDF_record
+class BPS : public STDF_Record
 {
 	private:
 		string seqName;
@@ -569,7 +614,7 @@ class BPS : public STDF_record
 };
 
 /*End Program Section Record*/
-class EPS : public STDF_record
+class EPS : public STDF_Record
 {
 	private:
 		virtual void decodeData();
@@ -580,7 +625,7 @@ class EPS : public STDF_record
 };
 
 /*Datalog Text Record*/
-class DTR : public STDF_record
+class DTR : public STDF_Record
 {
 	private:
 		string textData;
