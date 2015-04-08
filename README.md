@@ -2,7 +2,9 @@
 
 First git project
 
-The idea is to a create a C++ tool to convert STDF v4 files to a more "human-friendly" XML.
+The idea is to a create a C++ tool to convert STDF v4 files to a more "human-friendly" XML. 
+
+**pugixml** was used to create the nodes.
 
 STDF records implemented so far:
 - FAR
