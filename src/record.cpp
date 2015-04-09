@@ -643,12 +643,12 @@ pugi::xml_node HBR::appendNode( pugi::xml_node& root )
 
 	STDF_Record::appendChild( node, "NAME", this->name );
 	STDF_Record::appendChild( node, "REC_LEN", this->length );
-	STDF_Record::appendChild( node, "HeadNumber", this->headNumber );
-	STDF_Record::appendChild( node, "SiteNumber", this->siteNumber );
-	STDF_Record::appendChild( node, "HBinNumber", this->hBinNumber );
-	STDF_Record::appendChild( node, "HBinCount", this->hBinCount );
-	STDF_Record::appendChild( node, "HBinPassFail", this->hBinPassFail );
-	STDF_Record::appendChild( node, "HBinName", this->hBinName );
+	STDF_Record::appendChild( node, "HEAD_NUM", this->headNumber );
+	STDF_Record::appendChild( node, "SITE_NUM", this->siteNumber );
+	STDF_Record::appendChild( node, "HBIN_NUM", this->hBinNumber );
+	STDF_Record::appendChild( node, "HBIN_CNT", this->hBinCount );
+	STDF_Record::appendChild( node, "HBIN_PF", this->hBinPassFail );
+	STDF_Record::appendChild( node, "HBIN_NAM", this->hBinName );
 
 	return node;
 }
@@ -680,12 +680,12 @@ pugi::xml_node SBR::appendNode( pugi::xml_node& root )
 
 	STDF_Record::appendChild( node, "NAME", this->name );
 	STDF_Record::appendChild( node, "REC_LEN", this->length );
-	STDF_Record::appendChild( node, "HeadNumber", this->headNumber );
-	STDF_Record::appendChild( node, "SiteNumber", this->siteNumber );
-	STDF_Record::appendChild( node, "SBinNumber", this->sBinNumber );
-	STDF_Record::appendChild( node, "SBinCount", this->sBinCount );
-	STDF_Record::appendChild( node, "SBinPassFail", this->sBinPassFail );
-	STDF_Record::appendChild( node, "SBinName", this->sBinName );
+	STDF_Record::appendChild( node, "HEAD_NUM", this->headNumber );
+	STDF_Record::appendChild( node, "SITE_NUM", this->siteNumber );
+	STDF_Record::appendChild( node, "SBIN_NUM", this->sBinNumber );
+	STDF_Record::appendChild( node, "SBIN_CNT", this->sBinCount );
+	STDF_Record::appendChild( node, "SBIN_PF", this->sBinPassFail );
+	STDF_Record::appendChild( node, "SBIN_NAM", this->sBinName );
 
 	return node;
 }
