@@ -23,6 +23,7 @@ SOFTWARE.*/
 #ifndef RECORD_H_
 #define RECORD_H_
 
+#include <inttypes.h>
 #include <string.h>
 #include <string>
 

@@ -19,4 +19,4 @@ $(OBJDIR)/%.o: %.cpp
 	$(CC) $(CFLAGS) $< -o $@
 
 clean: 
-	rm -rf $(OBJ) $(BIN)
+	rm -rf $(OBJ) $(BIN) $(OBJDIR)

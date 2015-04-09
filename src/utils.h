@@ -23,6 +23,7 @@ SOFTWARE.*/
 #ifndef UTILS_H_
 #define UTILS_H_
 
+#include <inttypes.h>
 #include <sstream>
 #include <iostream>
 #include <fstream>
